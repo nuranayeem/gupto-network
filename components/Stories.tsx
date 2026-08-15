@@ -1,3 +1,5 @@
+import type { CurrentUser } from "@/types/current-user";
+
 const stories = [
   { name: "Ariana", initials: "AK", ring: "ring-1" },
   { name: "Jovan", initials: "JN", ring: "ring-2" },
@@ -6,11 +8,15 @@ const stories = [
   { name: "Lucas", initials: "LU", ring: "ring-5" },
 ];
 
-export default function Stories() {
+type StoriesProps = {
+  currentUser: CurrentUser;
+};
+
+export default function Stories({ currentUser }: StoriesProps) {
   return (
     <section className="stories card" aria-label="Stories">
       <button className="story story-create" type="button">
-        <span className="story-ring add-ring"><span>RS</span><b>+</b></span>
+        <span className="story-ring add-ring"><span>{currentUser.initials}</span><b>+</b></span>
         <small>Your story</small>
       </button>
       {stories.map((story) => (

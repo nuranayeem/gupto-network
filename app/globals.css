@@ -91,11 +91,19 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .brand { display: inline-flex; align-items: center; gap: 11px; font-family: Manrope, sans-serif; font-weight: 800; letter-spacing: .08em; }
 .desktop-brand { padding: 2px 8px 22px; }
 .brand-mark {
-  width: 38px; height: 38px; border-radius: 13px;
-  display: grid; place-items: center;
-  color: white; background: linear-gradient(145deg, var(--primary), #3d28c8);
-  box-shadow: 0 10px 24px rgba(111,76,255,.28);
-  font-size: 18px;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.brand-logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
 }
 .brand-text { font-size: 14px; }
 
@@ -300,7 +308,21 @@ kbd { color: var(--muted); background: var(--surface-soft); border: 1px solid va
   .ambient-one { left: -120px; }
   .sidebar, .desktop-actions { display: none; }
   .mobile-header { display: flex; position: fixed; inset: 0 0 auto 0; height: 64px; z-index: 50; border-bottom: 1px solid var(--line); align-items: center; justify-content: space-between; padding: 0 16px; }
-  .mobile-header .brand-mark { width: 34px; height: 34px; border-radius: 11px; font-size: 15px; }
+  .mobile-header .brand-mark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.brand-logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
   .mobile-header .brand-text { display: inline; font-size: 12px; }
   .mobile-header-actions { display: flex; gap: 8px; align-items: center; }
   .mobile-header .icon-btn { width: 37px; height: 37px; border-radius: 12px; box-shadow: none; }
@@ -348,3 +370,74 @@ kbd { color: var(--muted); background: var(--surface-soft); border: 1px solid va
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* GUPTO BRAND LOCKUP FINAL START */
+
+/*
+  Final approved Gupto brand lockup.
+  Keep logo and brand-name values together.
+*/
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.brand-mark {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+}
+
+.brand-logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  transform: none;
+}
+
+.brand-name {
+  font-family: Manrope, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.035em;
+  color: #6F36E9;
+  white-space: nowrap;
+  transform: translateY(-2px);
+}
+
+/* Compact tablet sidebar keeps only the logo */
+@media (max-width: 1180px) and (min-width: 721px) {
+  .desktop-brand .brand-name {
+    display: none;
+  }
+}
+
+/* Mobile brand lockup */
+@media (max-width: 720px) {
+  .mobile-header .brand {
+    gap: 4px;
+  }
+
+  .mobile-header .brand-mark {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+  }
+
+  .mobile-header .brand-name {
+    display: inline-block;
+    font-size: 22px;
+    line-height: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* GUPTO BRAND LOCKUP FINAL END */
