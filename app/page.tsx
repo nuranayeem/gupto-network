@@ -7,7 +7,7 @@ export default async function HomePage() {
   const session = await auth();
 
   if (!session?.user?.email) {
-    redirect("/api/auth/signin");
+    redirect("/login");
   }
 
   const dbUser = await prisma.user.findUnique({

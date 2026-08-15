@@ -441,3 +441,881 @@ kbd { color: var(--muted); background: var(--surface-soft); border: 1px solid va
 }
 
 /* GUPTO BRAND LOCKUP FINAL END */
+
+/* GUPTO AUTH UI START */
+
+body:has(.auth-page) {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.auth-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  position: relative;
+  isolation: isolate;
+}
+
+.auth-page .ambient { z-index: -1; }
+
+.auth-shell {
+  width: min(1080px, 100%);
+  min-height: 640px;
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.auth-theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 20;
+}
+
+.auth-intro {
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  padding: 34px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-intro::after {
+  content: "";
+  position: absolute;
+  width: 290px;
+  height: 290px;
+  right: -145px;
+  bottom: -125px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(111,76,255,.14), rgba(19,200,160,.08));
+  pointer-events: none;
+}
+
+.auth-intro .brand { align-self: flex-start; }
+.auth-intro .brand-mark { width: 58px; height: 58px; flex-basis: 58px; }
+.auth-intro .brand-name { font-size: 29px; }
+
+.auth-intro-copy {
+  margin: auto 0 46px;
+  max-width: 430px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-intro-copy h1 {
+  font-family: Manrope, sans-serif;
+  font-size: clamp(36px, 4.4vw, 56px);
+  line-height: .98;
+  letter-spacing: -.055em;
+  margin: 12px 0 18px;
+}
+
+.auth-intro-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+  max-width: 390px;
+}
+
+.auth-promise-list {
+  display: grid;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-promise-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.auth-promise-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.auth-promise-item div { display: grid; gap: 3px; }
+.auth-promise-item strong { font-size: 11.5px; }
+.auth-promise-item small { color: var(--muted); font-size: 9.5px; line-height: 1.5; }
+
+.auth-intro-footer {
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: .04em;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-form-wrap {
+  display: grid;
+  place-items: center;
+}
+
+.auth-form-card {
+  width: min(500px, 100%);
+  padding: 40px;
+  border-radius: 30px;
+  box-shadow: var(--shadow);
+}
+
+.auth-form-heading { margin-bottom: 26px; }
+.auth-form-heading h2 {
+  font-family: Manrope, sans-serif;
+  font-size: 30px;
+  line-height: 1.08;
+  letter-spacing: -.04em;
+  margin: 8px 0 8px;
+}
+.auth-form-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.auth-form { display: grid; gap: 16px; }
+.auth-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.auth-field { display: grid; gap: 7px; }
+.auth-field > span {
+  color: var(--text);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.auth-field input,
+.auth-prefix-input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+  color: var(--text);
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.auth-field input {
+  padding: 0 14px;
+  font-size: 12px;
+}
+
+.auth-field input::placeholder { color: var(--muted); opacity: .76; }
+
+.auth-field input:focus,
+.auth-prefix-input:focus-within {
+  border-color: rgba(111,76,255,.45);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+  background: var(--surface-solid);
+}
+
+.auth-prefix-input {
+  display: flex;
+  align-items: center;
+  padding-left: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.auth-prefix-input input {
+  min-height: 46px;
+  padding-left: 5px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.auth-prefix-input input:focus { box-shadow: none; background: transparent; }
+
+.auth-helper-copy {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: 9.5px;
+  line-height: 1.55;
+}
+
+.auth-primary-btn {
+  width: 100%;
+  min-height: 50px;
+  border: 0;
+  border-radius: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  font-weight: 700;
+  font-size: 12px;
+  box-shadow: 0 14px 26px rgba(111,76,255,.22);
+  transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+
+.auth-primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 17px 31px rgba(111,76,255,.28);
+}
+
+.auth-primary-btn:disabled { cursor: wait; opacity: .72; }
+.auth-link-btn { margin-top: 22px; }
+
+.auth-switch-copy {
+  margin: 22px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+.auth-switch-copy a { color: var(--primary); font-weight: 700; }
+.auth-switch-copy a:hover { text-decoration: underline; }
+
+.auth-alert {
+  margin: -8px 0 18px;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.auth-alert > span {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.auth-alert.error {
+  color: #b62c4a;
+  background: rgba(255,77,115,.09);
+  border: 1px solid rgba(255,77,115,.14);
+}
+.auth-alert.error > span { background: rgba(255,77,115,.13); }
+body.dark .auth-alert.error { color: #ff8ea7; }
+
+.auth-alert.success {
+  color: #14765f;
+  background: rgba(19,200,160,.09);
+  border: 1px solid rgba(19,200,160,.14);
+}
+.auth-alert.success > span { background: rgba(19,200,160,.13); }
+body.dark .auth-alert.success { color: #74e5cb; }
+
+.auth-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.38);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: auth-spin .7s linear infinite;
+}
+.auth-spinner.small {
+  width: 15px;
+  height: 15px;
+  border-color: rgba(111,76,255,.2);
+  border-top-color: var(--primary);
+}
+
+.auth-loading-card {
+  min-width: 220px;
+  min-height: 110px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text);
+}
+.auth-loading-card .auth-spinner {
+  border-color: rgba(111,76,255,.2);
+  border-top-color: var(--primary);
+}
+.auth-loading-card strong { font-size: 12px; }
+
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+
+.sidebar-footer { display: grid; gap: 5px; }
+.signout-form { width: 100%; }
+.signout-btn {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  transition: color .18s ease, background .18s ease;
+}
+.signout-btn:hover { color: var(--danger); background: rgba(255,77,115,.07); }
+.signout-btn:disabled { cursor: wait; opacity: .65; }
+.signout-btn svg { width: 16px; height: 16px; }
+.signout-form.compact { width: auto; }
+.signout-btn.compact {
+  width: 37px;
+  min-height: 37px;
+  height: 37px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (max-width: 1180px) and (min-width: 721px) {
+  .sidebar-footer .signout-btn { width: 50px; min-height: 42px; margin: 0 auto; font-size: 0; }
+  .sidebar-footer .signout-btn svg { width: 18px; height: 18px; }
+}
+
+@media (max-width: 900px) {
+  .auth-page { padding: 24px; }
+  .auth-shell { width: min(560px, 100%); min-height: 0; grid-template-columns: 1fr; }
+  .auth-intro { min-height: 260px; padding: 28px; }
+  .auth-intro-copy { margin: 45px 0 0; }
+  .auth-intro-copy h1 { font-size: 38px; max-width: 390px; }
+  .auth-intro-copy p { max-width: 430px; }
+  .auth-promise-list, .auth-intro-footer { display: none; }
+  .auth-form-card { width: 100%; }
+}
+
+@media (max-width: 560px) {
+  .auth-page { padding: 14px; align-items: start; }
+  .auth-shell { gap: 12px; }
+  .auth-theme-toggle { top: 18px; right: 18px; }
+  .auth-intro { min-height: 210px; padding: 22px; border-radius: 22px; }
+  .auth-intro .brand-mark { width: 48px; height: 48px; flex-basis: 48px; }
+  .auth-intro .brand-name { font-size: 24px; }
+  .auth-intro-copy { margin: 28px 0 0; }
+  .auth-intro-copy h1 { font-size: 31px; margin: 8px 0 10px; }
+  .auth-intro-copy p { font-size: 11.5px; line-height: 1.6; }
+  .auth-form-card { padding: 26px 20px; border-radius: 22px; }
+  .auth-form-heading h2 { font-size: 25px; }
+  .auth-field-grid { grid-template-columns: 1fr; gap: 16px; }
+}
+
+/* GUPTO AUTH UI END */
+
+/* GUPTO SIGNUP SINGLE-CARD REFINEMENT START */
+
+.auth-signup-shell {
+  width: min(500px, 100%);
+  display: grid;
+  place-items: center;
+}
+
+.auth-signup-card {
+  width: 100%;
+}
+
+.auth-signup-heading {
+  margin-bottom: 26px;
+}
+
+.auth-signup-brand {
+  display: flex;
+  align-items: center;
+  margin-bottom: 17px;
+}
+
+.auth-signup-brand .brand {
+  gap: 4px;
+}
+
+.auth-signup-brand .brand-mark {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+
+.auth-signup-brand .brand-name {
+  font-size: 20px;
+  letter-spacing: -.035em;
+  transform: translateY(-1px);
+}
+
+.auth-signup-heading h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  .auth-signup-page {
+    align-items: center;
+  }
+
+  .auth-signup-brand {
+    margin-bottom: 15px;
+  }
+
+  .auth-signup-brand .brand-mark {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .auth-signup-brand .brand-name {
+    font-size: 18px;
+  }
+}
+
+/* GUPTO SIGNUP SINGLE-CARD REFINEMENT END */
+
+/* GUPTO LOGIN SINGLE-CARD REFINEMENT START */
+
+.auth-login-shell,
+.auth-forgot-shell {
+  width: min(500px, 100%);
+  display: grid;
+  place-items: center;
+}
+
+.auth-login-card,
+.auth-forgot-card {
+  width: 100%;
+}
+
+.auth-login-heading {
+  margin-bottom: 26px;
+}
+
+.auth-login-brand {
+  display: flex;
+  align-items: center;
+  margin-bottom: 17px;
+}
+
+.auth-login-brand .brand {
+  gap: 4px;
+}
+
+.auth-login-brand .brand-mark {
+  width: 46px;
+  height: 46px;
+  flex-basis: 46px;
+}
+
+.auth-login-brand .brand-name {
+  font-size: 23px;
+  letter-spacing: -.035em;
+  transform: translateY(-1px);
+}
+
+.auth-login-heading h2 {
+  margin-top: 0;
+  font-size: 27px;
+}
+
+.auth-password-input {
+  position: relative;
+}
+
+.auth-password-input input {
+  padding-right: 58px;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease, opacity .18s ease;
+}
+
+.auth-password-toggle:hover {
+  background: var(--primary-soft);
+  color: var(--primary-2);
+}
+
+.auth-password-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  margin: 0 auto;
+}
+
+.auth-password-icon-closed {
+  width: 21px;
+  height: 21px;
+}
+
+.auth-password-icon-open {
+  width: 20px;
+  height: 20px;
+}
+
+.auth-password-toggle:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.auth-inline-actions {
+  margin-top: -4px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.auth-inline-link {
+  color: var(--primary);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.auth-inline-link:hover {
+  text-decoration: underline;
+}
+
+.auth-login-footer-links {
+  margin-top: 22px;
+  display: grid;
+  gap: 8px;
+}
+
+.auth-secondary-copy {
+  margin-top: 0;
+}
+
+@media (max-width: 560px) {
+  .auth-login-page,
+  .auth-forgot-page {
+    align-items: center;
+  }
+
+  .auth-login-brand {
+    margin-bottom: 15px;
+  }
+
+  .auth-login-brand .brand-mark {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .auth-login-brand .brand-name {
+    font-size: 20px;
+  }
+
+  .auth-login-heading h2 {
+    font-size: 24px;
+  }
+
+  .auth-inline-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* GUPTO LOGIN SINGLE-CARD REFINEMENT END */
+
+/* GUPTO ANIMATED LOGIN MASCOT START */
+
+.auth-login-brand-animated {
+  margin-bottom: 10px;
+}
+
+.auth-animated-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.auth-mascot-stage {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  flex: 0 0 82px;
+  display: inline-block;
+  overflow: visible;
+  transform: translateZ(0);
+}
+
+.auth-mascot-layer {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.auth-mascot-body {
+  z-index: 1;
+}
+
+.auth-mascot-wing {
+  z-index: 3;
+  transition: transform 430ms cubic-bezier(.22, .82, .24, 1), filter 220ms ease;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.auth-mascot-wing-left {
+  transform-origin: 31.9% 49.4%;
+  transform: rotate(0deg);
+}
+
+.auth-mascot-wing-right {
+  transform-origin: 68.1% 49.4%;
+  transform: rotate(0deg);
+}
+
+.auth-animated-brand.is-covering .auth-mascot-wing-left {
+  transform: rotate(65deg);
+}
+
+.auth-animated-brand.is-covering .auth-mascot-wing-right {
+  transform: rotate(-65deg);
+}
+
+.auth-animated-brand.is-covering .auth-mascot-wing {
+  filter: drop-shadow(0 2px 3px rgba(62, 31, 128, .10));
+}
+
+.auth-animated-brand-name {
+  font-family: Manrope, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+  transform: translateY(-1px);
+}
+
+.auth-login-brand-animated + h2 {
+  font-size: 25px;
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-mascot-wing {
+    transition-duration: 1ms;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-mascot-stage {
+    width: 72px;
+    height: 72px;
+    flex-basis: 72px;
+  }
+
+  .auth-animated-brand-name {
+    font-size: 21px;
+  }
+
+  .auth-login-brand-animated + h2 {
+    font-size: 23px;
+  }
+}
+
+/* GUPTO ANIMATED LOGIN MASCOT END */
+
+/* GUPTO FORGOT PASSWORD VISUAL POLISH START */
+
+.auth-forgot-card .auth-login-brand {
+  margin-bottom: 16px;
+}
+
+.auth-forgot-card .auth-login-brand .brand {
+  gap: 5px;
+}
+
+.auth-forgot-card .auth-login-brand .brand-mark {
+  width: 54px;
+  height: 54px;
+  flex-basis: 54px;
+}
+
+.auth-forgot-card .auth-login-brand .brand-name {
+  font-size: 27px;
+  letter-spacing: -.04em;
+}
+
+.auth-forgot-card .auth-login-heading h2 {
+  margin-top: 0;
+  font-size: 24px;
+  line-height: 1.08;
+  letter-spacing: -.04em;
+}
+
+@media (max-width: 560px) {
+  .auth-forgot-card .auth-login-brand .brand-mark {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .auth-forgot-card .auth-login-brand .brand-name {
+    font-size: 24px;
+  }
+
+  .auth-forgot-card .auth-login-heading h2 {
+    font-size: 22px;
+  }
+}
+
+/* GUPTO FORGOT PASSWORD VISUAL POLISH END */
+
+/* GUPTO FORGOT PASSWORD LOGO PIXEL-PERFECT FIX START */
+
+/*
+  The source logo PNG contains transparent breathing room around the owl mark.
+  Scale the actual image inside the lockup so the visible owl and wordmark
+  read as one balanced unit instead of only enlarging the text.
+*/
+.auth-forgot-card .auth-login-brand .brand {
+  gap: 7px;
+}
+
+.auth-forgot-card .auth-login-brand .brand-mark {
+  width: 62px;
+  height: 62px;
+  flex-basis: 62px;
+  overflow: visible;
+}
+
+.auth-forgot-card .auth-login-brand .brand-logo-image {
+  width: 100%;
+  height: 100%;
+  transform: scale(1.12);
+  transform-origin: center;
+}
+
+.auth-forgot-card .auth-login-brand .brand-name {
+  font-size: 28px;
+  line-height: 1;
+  transform: translateY(-2px);
+}
+
+.auth-forgot-card .auth-login-heading h2 {
+  font-size: 23px;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+@media (max-width: 560px) {
+  .auth-forgot-card .auth-login-brand .brand {
+    gap: 6px;
+  }
+
+  .auth-forgot-card .auth-login-brand .brand-mark {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+  }
+
+  .auth-forgot-card .auth-login-brand .brand-logo-image {
+    transform: scale(1.12);
+  }
+
+  .auth-forgot-card .auth-login-brand .brand-name {
+    font-size: 25px;
+  }
+
+  .auth-forgot-card .auth-login-heading h2 {
+    font-size: 21px;
+  }
+}
+
+/* GUPTO FORGOT PASSWORD LOGO PIXEL-PERFECT FIX END */
+
+/* GUPTO SIGNUP LOGO PIXEL-PERFECT FIX START */
+/*
+  Match the upgraded forgot-password hierarchy on signup too:
+  make the visible owl/logo lockup genuinely larger, not only the text,
+  while keeping the heading slightly subordinate.
+*/
+.auth-signup-brand .brand {
+  gap: 7px;
+}
+
+.auth-signup-brand .brand-mark {
+  width: 62px;
+  height: 62px;
+  flex-basis: 62px;
+  overflow: visible;
+}
+
+.auth-signup-brand .brand-logo-image {
+  width: 100%;
+  height: 100%;
+  transform: scale(1.12);
+  transform-origin: center;
+}
+
+.auth-signup-brand .brand-name {
+  font-size: 28px;
+  line-height: 1;
+  transform: translateY(-2px);
+}
+
+.auth-signup-heading h2 {
+  font-size: 23px;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+@media (max-width: 560px) {
+  .auth-signup-brand .brand {
+    gap: 6px;
+  }
+
+  .auth-signup-brand .brand-mark {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+  }
+
+  .auth-signup-brand .brand-logo-image {
+    transform: scale(1.12);
+  }
+
+  .auth-signup-brand .brand-name {
+    font-size: 25px;
+  }
+
+  .auth-signup-heading h2 {
+    font-size: 21px;
+  }
+}
+/* GUPTO SIGNUP LOGO PIXEL-PERFECT FIX END */
