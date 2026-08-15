@@ -1,5 +1,6 @@
 import type { ChangeEvent, RefObject } from "react";
 import type { Post } from "@/types/social";
+import type { CurrentUser } from "@/types/current-user";
 import ThemeToggle from "./ThemeToggle";
 import Stories from "./Stories";
 import Composer from "./Composer";
@@ -11,6 +12,7 @@ type FeedProps = {
   composerValue: string;
   composerRef: RefObject<HTMLTextAreaElement | null>;
   activeFilter: "for-you" | "following";
+  currentUser: CurrentUser;
   onToggleTheme: () => void;
   onComposerChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onPublish: () => void;
@@ -25,6 +27,7 @@ export default function Feed({
   composerValue,
   composerRef,
   activeFilter,
+  currentUser,
   onToggleTheme,
   onComposerChange,
   onPublish,
@@ -37,7 +40,7 @@ export default function Feed({
       <section className="feed-topbar">
         <div>
           <span className="eyebrow">YOUR SPACE</span>
-          <h1>Good evening, Rashid.</h1>
+          <h1>Good evening, {currentUser.name}.</h1>
         </div>
         <div className="desktop-actions">
           <ThemeToggle onToggle={onToggleTheme} />
@@ -48,8 +51,8 @@ export default function Feed({
         </div>
       </section>
 
-      <Stories />
-      <Composer value={composerValue} inputRef={composerRef} onChange={onComposerChange} onPublish={onPublish} />
+      <Stories currentUser={currentUser} />
+      <Composer value={composerValue} inputRef={composerRef} currentUser={currentUser} onChange={onComposerChange} onPublish={onPublish} />
 
       <section className="feed-filter">
         <button className={`filter${activeFilter === "for-you" ? " active" : ""}`} data-filter="for-you" onClick={() => onFilterChange("for-you")}>For you</button>
@@ -71,3 +74,4 @@ export default function Feed({
     </main>
   );
 }
+

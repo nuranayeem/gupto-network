@@ -1,10 +1,12 @@
+import type { CurrentUser } from "@/types/current-user";
 import Brand from "./Brand";
 
 type SidebarProps = {
   onFocusComposer: () => void;
+  currentUser: CurrentUser;
 };
 
-export default function Sidebar({ onFocusComposer }: SidebarProps) {
+export default function Sidebar({ onFocusComposer, currentUser }: SidebarProps) {
   return (
     <aside className="sidebar glass">
       <div>
@@ -47,10 +49,10 @@ export default function Sidebar({ onFocusComposer }: SidebarProps) {
 
       <div className="sidebar-footer">
         <button className="profile-chip">
-          <span className="profile-avatar">RS</span>
+          <span className="profile-avatar">{currentUser.initials}</span>
           <span className="profile-meta">
-            <strong>Rashid Sohail</strong>
-            <small>@rashid</small>
+            <strong>{currentUser.name}</strong>
+            <small>@{currentUser.username}</small>
           </span>
           <span className="profile-more">•••</span>
         </button>

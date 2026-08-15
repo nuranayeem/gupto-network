@@ -3,13 +3,18 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { initialPosts } from "@/data/posts";
 import type { Post } from "@/types/social";
+import type { CurrentUser } from "@/types/current-user";
 import MobileHeader from "./MobileHeader";
 import Sidebar from "./Sidebar";
 import Feed from "./Feed";
 import RightPanel from "./RightPanel";
 import MobileNav from "./MobileNav";
 
-export default function GuptoNetworkApp() {
+type GuptoNetworkAppProps = {
+  currentUser: CurrentUser;
+};
+
+export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [composerValue, setComposerValue] = useState("");
   const [bookmarks, setBookmarks] = useState<Set<string>>(() => new Set());
@@ -72,9 +77,9 @@ export default function GuptoNetworkApp() {
 
     const newPost: Post = {
       id: `user-${Date.now()}`,
-      initials: "RS",
-      name: "Rashid Sohail",
-      handle: "@rashid",
+      initials: currentUser.initials,
+      name: currentUser.name,
+      handle: `@${currentUser.username}`,
       time: "now",
       text: message,
       visual: "none",
@@ -136,16 +141,17 @@ export default function GuptoNetworkApp() {
       <div className="ambient ambient-one"></div>
       <div className="ambient ambient-two"></div>
 
-      <MobileHeader onToggleTheme={toggleTheme} />
+      <MobileHeader onToggleTheme={toggleTheme} currentUser={currentUser} />
 
       <div className="app-shell">
-        <Sidebar onFocusComposer={focusComposer} />
+        <Sidebar onFocusComposer={focusComposer} currentUser={currentUser} />
         <Feed
           posts={posts}
           bookmarks={bookmarks}
           composerValue={composerValue}
           composerRef={composerRef}
           activeFilter={activeFilter}
+          currentUser={currentUser}
           onToggleTheme={toggleTheme}
           onComposerChange={handleComposerChange}
           onPublish={publishPost}
@@ -164,3 +170,5 @@ export default function GuptoNetworkApp() {
     </>
   );
 }
+
+

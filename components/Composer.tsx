@@ -1,17 +1,19 @@
 import type { ChangeEvent, RefObject } from "react";
+import type { CurrentUser } from "@/types/current-user";
 
 type ComposerProps = {
   value: string;
   inputRef: RefObject<HTMLTextAreaElement | null>;
+  currentUser: CurrentUser;
   onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onPublish: () => void;
 };
 
-export default function Composer({ value, inputRef, onChange, onPublish }: ComposerProps) {
+export default function Composer({ value, inputRef, currentUser, onChange, onPublish }: ComposerProps) {
   return (
     <section className="composer card" id="composer">
       <div className="composer-main">
-        <span className="profile-avatar large">RS</span>
+        <span className="profile-avatar large">{currentUser.initials}</span>
         <textarea
           id="postInput"
           ref={inputRef}

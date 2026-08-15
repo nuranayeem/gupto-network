@@ -60,7 +60,7 @@ export default function PostCard({ post, bookmarked, onToggleLike, onToggleBookm
       <header className="post-header">
         <div className="post-user">
           {post.isOwn ? (
-            <span className="profile-avatar">RS</span>
+            <span className="profile-avatar">{post.initials}</span>
           ) : (
             <span className={`avatar ${post.avatarClass ?? ""}`}>{post.initials}</span>
           )}
@@ -101,3 +101,4 @@ export default function PostCard({ post, bookmarked, onToggleLike, onToggleBookm
     </article>
   );
 }
+
