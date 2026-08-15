@@ -70,6 +70,25 @@ npm run build
 npm start
 ```
 
-## Migration note
+## Current product status
 
-No backend, database, authentication, upload storage, or real social API has been added in this phase. This phase is intentionally limited to framework migration while preserving the existing UI and front-end behavior.
+The migration phase is complete. The project now includes PostgreSQL/Prisma user storage, credentials authentication, custom auth UI, and verified Gmail signup. The social feed interactions are still primarily front-end/demo behavior until each social feature is migrated to real database-backed APIs.
+
+## Verified signup configuration
+
+New accounts are created only after a Gmail OTP is verified. Configure these environment variables before testing signup:
+
+```env
+OTP_SECRET="use-a-long-random-secret"
+RESEND_API_KEY="your-resend-api-key"
+EMAIL_FROM="Gupto <no-reply@your-verified-domain.com>"
+```
+
+`OTP_SECRET` may be omitted only when `AUTH_SECRET` is already configured; the signup OTP service uses `AUTH_SECRET` as its fallback signing secret. `EMAIL_FROM` must be an address/domain accepted by the configured Resend account.
+
+Apply the pending-signup migration before starting the app:
+
+```powershell
+npx prisma migrate dev
+npm run dev
+```

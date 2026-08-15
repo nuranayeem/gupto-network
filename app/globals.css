@@ -600,7 +600,7 @@ body:has(.auth-page) {
 .auth-form { display: grid; gap: 16px; }
 .auth-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .auth-field { display: grid; gap: 7px; }
-.auth-field > span {
+.auth-field > span:not(.auth-validation-message) {
   color: var(--text);
   font-size: 10.5px;
   font-weight: 700;
@@ -1319,3 +1319,127 @@ body.dark .auth-alert.success { color: #74e5cb; }
   }
 }
 /* GUPTO SIGNUP LOGO PIXEL-PERFECT FIX END */
+
+/* GUPTO EMAIL VERIFICATION START */
+.auth-otp-input {
+  text-align: center;
+  font-size: 21px !important;
+  font-weight: 800;
+  letter-spacing: .42em;
+  padding-left: calc(14px + .42em) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-verification-actions {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.auth-verification-actions .auth-switch-copy {
+  margin-top: 0;
+}
+
+.auth-text-btn {
+  border: 0;
+  padding: 4px 8px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-text-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.auth-text-btn:disabled {
+  color: var(--muted);
+  cursor: default;
+  text-decoration: none;
+}
+
+.auth-verification-unavailable .auth-form-heading {
+  margin-bottom: 4px;
+}
+/* GUPTO EMAIL VERIFICATION END */
+
+.auth-inline-link-btn {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-inline-link-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.auth-inline-link-btn:disabled {
+  color: var(--muted);
+  cursor: wait;
+}
+
+/* Signup real-time validation: compact inline feedback without alert boxes. */
+.auth-validation-message,
+.auth-form-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 9.5px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.auth-field > .auth-validation-message,
+.auth-validation-message > span,
+.auth-form-message > span {
+  font-weight: 400;
+}
+
+.auth-validation-message {
+  margin-top: 1px;
+}
+
+.auth-form-message {
+  margin: -8px 0 18px;
+}
+
+.auth-validation-message.error,
+.auth-form-message.error {
+  color: #cf3154;
+}
+
+.auth-validation-message.success,
+.auth-form-message.success {
+  color: #14866a;
+}
+
+body.dark .auth-validation-message.error,
+body.dark .auth-form-message.error {
+  color: #ff8ea7;
+}
+
+body.dark .auth-validation-message.success,
+body.dark .auth-form-message.success {
+  color: #74e5cb;
+}
+
+.auth-validation-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  margin-top: 0;
+}
+
+/* Keep the normal button look, but make incomplete signup state visibly inactive. */
+.auth-form .auth-primary-btn:disabled:not(:has(.auth-spinner)) {
+  cursor: not-allowed;
+  opacity: .55;
+  box-shadow: none;
+}

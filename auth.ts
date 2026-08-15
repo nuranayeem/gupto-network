@@ -5,7 +5,12 @@ import { z } from "zod";
 import { prisma } from "./lib/prisma";
 
 const signInSchema = z.object({
-  email: z.string().email().transform((value) => value.toLowerCase()),
+  identifier: z
+    .string()
+    .trim()
+    .min(1)
+    .max(254)
+    .transform((value) => value.toLowerCase()),
   password: z.string().min(8).max(72),
 });
 
@@ -22,9 +27,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: {
-          label: "Email",
-          type: "email",
+        identifier: {
+          label: "Email or username",
+          type: "text",
         },
         password: {
           label: "Password",
@@ -39,13 +44,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const { email, password } = parsed.data;
+        const { identifier, password } = parsed.data;
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email,
-          },
-        });
+        const user = identifier.includes("@")
+          ? await prisma.user.findUnique({
+              where: { email: identifier },
+            })
+          : await prisma.user.findUnique({
+              where: { username: identifier },
+            });
 
         if (!user?.passwordHash) {
           return null;

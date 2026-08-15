@@ -1,18 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { loginAction, type LoginActionState } from "@/app/auth-actions";
+import {
+  checkLoginCredentials,
+  loginAction,
+  type LoginActionState,
+} from "@/app/auth-actions";
 import AnimatedGuptoMascot from "@/components/auth/AnimatedGuptoMascot";
 
 type LoginFormProps = {
   redirectTo: string;
   created?: boolean;
   defaultEmail?: string;
+  reset?: boolean;
 };
 
 const initialState: LoginActionState = {};
+
+function WarningIcon() {
+  return (
+    <svg className="auth-validation-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M10.3 3.45a2 2 0 0 1 3.4 0l8.02 13.1A2 2 0 0 1 20.02 19H3.98a2 2 0 0 1-1.7-2.45l8.02-13.1Z"
+        fill="currentColor"
+      />
+      <path d="M12 8v5" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="16.2" r="1.15" fill="white" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="auth-validation-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="currentColor" />
+      <path
+        d="m7.7 12.2 2.7 2.7 5.9-6"
+        stroke="white"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 function LoginButton() {
   const { pending } = useFormStatus();
@@ -37,10 +70,46 @@ function LoginButton() {
 export default function LoginForm({
   redirectTo,
   created = false,
-  defaultEmail = "",
+  reset = false,
 }: LoginFormProps) {
   const [state, formAction] = useActionState(loginAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [liveCredentialState, setLiveCredentialState] = useState<
+    "idle" | "valid" | "invalid"
+  >("idle");
+  const [editedSinceSubmit, setEditedSinceSubmit] = useState(false);
+
+  useEffect(() => {
+    const cleanIdentifier = identifier.trim();
+
+    if (!cleanIdentifier || password.length < 8) {
+      setLiveCredentialState("idle");
+      return;
+    }
+
+    let cancelled = false;
+    setLiveCredentialState("idle");
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const result = await checkLoginCredentials(cleanIdentifier, password);
+        if (!cancelled) {
+          setLiveCredentialState(result.valid ? "valid" : "invalid");
+        }
+      } catch {
+        if (!cancelled) {
+          setLiveCredentialState("idle");
+        }
+      }
+    }, 700);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [identifier, password]);
 
   return (
     <>
@@ -52,32 +121,55 @@ export default function LoginForm({
         <p>Pick up where you left off.</p>
       </div>
 
-      {created && (
-        <div className="auth-alert success" role="status">
-          <span aria-hidden="true">✓</span>
-          Account created. Sign in to continue.
+      {liveCredentialState === "valid" ? (
+        <div className="auth-form-message success" role="status" aria-live="polite">
+          <CheckIcon />
+          <span>Sign-in details are correct.</span>
         </div>
-      )}
-
-      {state.error && (
-        <div className="auth-alert error" role="alert">
-          <span aria-hidden="true">!</span>
-          {state.error}
+      ) : liveCredentialState === "invalid" ? (
+        <div className="auth-form-message error" role="alert" aria-live="polite">
+          <WarningIcon />
+          <span>Email, username, or password is incorrect.</span>
         </div>
-      )}
+      ) : !editedSinceSubmit && state.error ? (
+        <div className="auth-form-message error" role="alert" aria-live="polite">
+          <WarningIcon />
+          <span>{state.error}</span>
+        </div>
+      ) : !editedSinceSubmit && created ? (
+        <div className="auth-form-message success" role="status" aria-live="polite">
+          <CheckIcon />
+          <span>Account created. Sign in to continue.</span>
+        </div>
+      ) : !editedSinceSubmit && reset ? (
+        <div className="auth-form-message success" role="status" aria-live="polite">
+          <CheckIcon />
+          <span>Password updated. Sign in with your new password.</span>
+        </div>
+      ) : null}
 
-      <form action={formAction} className="auth-form">
+      <form
+        action={formAction}
+        className="auth-form"
+        autoComplete="off"
+        onSubmit={() => setEditedSinceSubmit(false)}
+      >
         <input type="hidden" name="redirectTo" value={redirectTo} />
 
         <label className="auth-field">
-          <span>Email</span>
+          <span>Email or username</span>
           <input
-            type="email"
-            name="email"
-            defaultValue={defaultEmail}
-            placeholder="you@example.com"
-            autoComplete="email"
-            inputMode="email"
+            type="text"
+            name="identifier"
+            value={identifier}
+            onChange={(event) => {
+              setIdentifier(event.target.value);
+              setEditedSinceSubmit(true);
+            }}
+            placeholder="Email or username"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
             required
           />
         </label>
@@ -88,6 +180,11 @@ export default function LoginForm({
             <input
               type={showPassword ? "text" : "password"}
               name="password"
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setEditedSinceSubmit(true);
+              }}
               placeholder="Enter your password"
               autoComplete="current-password"
               minLength={8}

@@ -8,6 +8,7 @@ type LoginPageProps = {
     callbackUrl?: string | string[];
     created?: string | string[];
     email?: string | string[];
+    reset?: string | string[];
   }>;
 };
 
@@ -30,6 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const redirectTo = safeRedirectPath(getFirst(params.callbackUrl));
   const created = getFirst(params.created) === "1";
   const defaultEmail = getFirst(params.email) ?? "";
+  const reset = getFirst(params.reset) === "1";
 
   return (
     <main className="auth-page auth-login-page">
@@ -47,6 +49,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             redirectTo={redirectTo}
             created={created}
             defaultEmail={defaultEmail}
+            reset={reset}
           />
         </div>
       </section>

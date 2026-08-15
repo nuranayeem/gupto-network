@@ -18,4 +18,48 @@ model User {
   emailVerified DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  passwordResetRequests PasswordResetRequest[]
+}
+
+
+model PendingSignup {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  username       String   @unique
+  name           String
+  passwordHash   String
+  otpHash        String
+  otpExpiresAt   DateTime
+  expiresAt      DateTime
+  otpAttempts    Int      @default(0)
+  otpResendCount Int      @default(0)
+  lastOtpSentAt  DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
+
+model PasswordResetRequest {
+  id                  String   @id @default(cuid())
+  userId              String
+  email               String
+  otpHash             String
+  otpExpiresAt        DateTime
+  expiresAt           DateTime
+  otpAttempts         Int      @default(0)
+  otpResendCount      Int      @default(0)
+  lastOtpSentAt       DateTime @default(now())
+  verifiedAt          DateTime?
+  resetTokenHash      String?  @unique
+  resetTokenExpiresAt DateTime?
+  usedAt              DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
+  @@index([expiresAt])
 }
