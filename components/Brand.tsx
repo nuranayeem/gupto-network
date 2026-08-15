@@ -1,12 +1,13 @@
 type BrandProps = {
   desktop?: boolean;
+  href?: string;
 };
 
-export default function Brand({ desktop = false }: BrandProps) {
+export default function Brand({ desktop = false, href = "#" }: BrandProps) {
   return (
     <a
       className={`brand${desktop ? " desktop-brand" : ""}`}
-      href="#"
+      href={href}
       aria-label="Gupto home"
     >
       <span className="brand-mark" aria-hidden="true">

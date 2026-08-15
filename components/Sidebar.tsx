@@ -1,5 +1,6 @@
 import type { CurrentUser } from "@/types/current-user";
 import Brand from "./Brand";
+import SignOutButton from "./auth/SignOutButton";
 
 type SidebarProps = {
   onFocusComposer: () => void;
@@ -48,14 +49,15 @@ export default function Sidebar({ onFocusComposer, currentUser }: SidebarProps) 
       </div>
 
       <div className="sidebar-footer">
-        <button className="profile-chip">
+        <div className="profile-chip">
           <span className="profile-avatar">{currentUser.initials}</span>
           <span className="profile-meta">
             <strong>{currentUser.name}</strong>
             <small>@{currentUser.username}</small>
           </span>
           <span className="profile-more">•••</span>
-        </button>
+        </div>
+        <SignOutButton />
       </div>
     </aside>
   );
