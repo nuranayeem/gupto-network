@@ -20,3 +20,6 @@ pnpm-debug.log*
 
 # Prisma generated client
 /generated/prisma/
+
+# TypeScript incremental cache
+*.tsbuildinfo
