@@ -17,7 +17,7 @@ export default function RightPanel({ searchRef, following, onToggleFollow }: Rig
     <aside className="right-panel">
       <div className="search-box glass">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-        <input ref={searchRef} type="search" placeholder="Search Nexora" aria-label="Search Nexora" />
+        <input ref={searchRef} type="search" placeholder="Search Gupto Network" aria-label="Search Gupto Network" />
         <kbd>⌘K</kbd>
       </div>
 
@@ -67,7 +67,7 @@ export default function RightPanel({ searchRef, following, onToggleFollow }: Rig
 
       <footer className="tiny-footer">
         <a href="#">About</a><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Help</a>
-        <span>© 2026 NEXORA</span>
+        <span>© 2026 GUPTO NETWORK</span>
       </footer>
     </aside>
   );

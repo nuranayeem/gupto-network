@@ -9,7 +9,7 @@ import Feed from "./Feed";
 import RightPanel from "./RightPanel";
 import MobileNav from "./MobileNav";
 
-export default function NexoraApp() {
+export default function GuptoNetworkApp() {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [composerValue, setComposerValue] = useState("");
   const [bookmarks, setBookmarks] = useState<Set<string>>(() => new Set());
@@ -30,7 +30,7 @@ export default function NexoraApp() {
   }, []);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("nexora-theme");
+    const savedTheme = localStorage.getItem("gupto-network-theme");
     document.body.classList.toggle("dark", savedTheme === "dark");
 
     return () => {
@@ -52,7 +52,7 @@ export default function NexoraApp() {
 
   const toggleTheme = () => {
     document.body.classList.toggle("dark");
-    localStorage.setItem("nexora-theme", document.body.classList.contains("dark") ? "dark" : "light");
+    localStorage.setItem("gupto-network-theme", document.body.classList.contains("dark") ? "dark" : "light");
   };
 
   const focusComposer = () => {

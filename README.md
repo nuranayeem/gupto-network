@@ -1,6 +1,6 @@
-# NEXORA — Next.js Migration
+# GUPTO NETWORK — Next.js Migration
 
-This is the migrated version of the original NEXORA social homepage.
+This is the migrated version of the original GUPTO NETWORK social homepage.
 
 ## Stack
 
@@ -42,7 +42,7 @@ components/
   Feed.tsx
   MobileHeader.tsx
   MobileNav.tsx
-  NexoraApp.tsx
+  GuptoNetworkApp.tsx
   PostCard.tsx
   RightPanel.tsx
   Sidebar.tsx

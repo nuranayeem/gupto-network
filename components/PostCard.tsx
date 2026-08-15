@@ -26,7 +26,7 @@ function QuoteVisual() {
     <div className="quote-card">
       <span className="quote-mark">“</span>
       <p>Make room for the idea<br/>before you make it loud.</p>
-      <span className="quote-credit">NEXORA / DAILY THOUGHT</span>
+      <span className="quote-credit">GUPTO NETWORK / DAILY THOUGHT</span>
     </div>
   );
 }

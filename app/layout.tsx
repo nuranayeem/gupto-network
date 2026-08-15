@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Nexora — Social, reimagined.",
-  description: "Nexora social homepage",
+  title: "Gupto Network — Social, reimagined.",
+  description: "Gupto Network social homepage",
 };
 
 export const viewport: Viewport = {

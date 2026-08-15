@@ -1,5 +1,5 @@
-import NexoraApp from "@/components/NexoraApp";
+import GuptoNetworkApp from "@/components/GuptoNetworkApp";
 
 export default function HomePage() {
-  return <NexoraApp />;
+  return <GuptoNetworkApp />;
 }
