@@ -126,23 +126,22 @@ Profile information is database-backed and persists between sessions.
 ## About Section
 
 The profile About section presents user information in a structured order:
-
-1. Bio
-2. Gender
-3. Category
-4. Workplace
-5. Current location
-6. Hometown
-7. School
-8. College
-9. University
-10. Relationship status
-11. Interests
-12. Social links
-13. Website
-14. Birth date
-15. Email
-16. Phone number
+- Bio
+- Gender
+- Category
+- Workplace
+- Current location
+- Hometown
+- School
+- College
+- University
+- Relationship status
+- Interests
+- Social links
+- Website
+- Birth date
+- Email
+- Phone number
 
 ### About Field Management
 
@@ -554,3 +553,4 @@ https://github.com/nuranayeem/gupto-network
 **GUPTO NETWORK**
 
 A growing full-stack social networking platform focused on persistent user identity, structured profiles, social content and a clean responsive experience.
+
