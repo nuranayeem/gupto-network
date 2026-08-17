@@ -1,4 +1,5 @@
 import type { Post } from "@/types/social";
+import UserAvatar from "./UserAvatar";
 
 type PostCardProps = {
   post: Post;
@@ -60,9 +61,9 @@ export default function PostCard({ post, bookmarked, onToggleLike, onToggleBookm
       <header className="post-header">
         <div className="post-user">
           {post.isOwn ? (
-            <span className="profile-avatar">{post.initials}</span>
+            <UserAvatar initials={post.initials} image={post.avatarUrl} theme={post.avatarTheme} />
           ) : (
-            <span className={`avatar ${post.avatarClass ?? ""}`}>{post.initials}</span>
+            <UserAvatar initials={post.initials} image={post.avatarUrl} theme={post.avatarTheme} className={`avatar ${post.avatarClass ?? ""}`} />
           )}
           <div>
             <div className="name-row">
@@ -101,4 +102,3 @@ export default function PostCard({ post, bookmarked, onToggleLike, onToggleBookm
     </article>
   );
 }
-

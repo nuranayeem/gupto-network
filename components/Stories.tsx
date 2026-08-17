@@ -1,4 +1,5 @@
 import type { CurrentUser } from "@/types/current-user";
+import UserAvatar from "./UserAvatar";
 
 const stories = [
   { name: "Ariana", initials: "AK", ring: "ring-1" },
@@ -16,7 +17,7 @@ export default function Stories({ currentUser }: StoriesProps) {
   return (
     <section className="stories card" aria-label="Stories">
       <button className="story story-create" type="button">
-        <span className="story-ring add-ring"><span>{currentUser.initials}</span><b>+</b></span>
+        <span className="story-ring add-ring"><UserAvatar initials={currentUser.initials} image={currentUser.image} theme={currentUser.avatarTheme} className="story-avatar" /><b>+</b></span>
         <small>Your story</small>
       </button>
       {stories.map((story) => (

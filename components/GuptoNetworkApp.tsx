@@ -1,25 +1,44 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { initialPosts } from "@/data/posts";
 import type { Post } from "@/types/social";
 import type { CurrentUser } from "@/types/current-user";
 import MobileHeader from "./MobileHeader";
 import Sidebar from "./Sidebar";
 import Feed from "./Feed";
+import ProfileView from "./ProfileView";
 import RightPanel from "./RightPanel";
 import MobileNav from "./MobileNav";
 
 type GuptoNetworkAppProps = {
   currentUser: CurrentUser;
+  initialPosts: Post[];
+  initialProfilePosts: Post[];
 };
 
-export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
+const knownSections = new Set([
+  "home",
+  "discover",
+  "messages",
+  "notifications",
+  "bookmarks",
+  "profile",
+  "feed-control",
+  "requests",
+  "circles",
+  "settings",
+]);
+
+export default function GuptoNetworkApp({ currentUser, initialPosts, initialProfilePosts }: GuptoNetworkAppProps) {
+  const [user, setUser] = useState(currentUser);
   const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const [profilePosts, setProfilePosts] = useState<Post[]>(initialProfilePosts);
   const [composerValue, setComposerValue] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false);
   const [bookmarks, setBookmarks] = useState<Set<string>>(() => new Set());
   const [following, setFollowing] = useState<Set<string>>(() => new Set());
   const [activeFilter, setActiveFilter] = useState<"for-you" | "following">("for-you");
+  const [activeSection, setActiveSection] = useState("home");
   const [toast, setToast] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
 
@@ -44,6 +63,17 @@ export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
   }, []);
 
   useEffect(() => {
+    const syncSectionFromHash = () => {
+      const section = window.location.hash.replace(/^#/, "") || "home";
+      setActiveSection(knownSections.has(section) ? section : "home");
+    };
+
+    syncSectionFromHash();
+    window.addEventListener("hashchange", syncSectionFromHash);
+    return () => window.removeEventListener("hashchange", syncSectionFromHash);
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -60,9 +90,21 @@ export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
     localStorage.setItem("gupto-network-theme", document.body.classList.contains("dark") ? "dark" : "light");
   };
 
+  const openProfile = () => {
+    window.location.hash = "profile";
+    setActiveSection("profile");
+  };
+
   const focusComposer = () => {
-    document.getElementById("composer")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => composerRef.current?.focus(), 400);
+    if (activeSection !== "home") {
+      window.location.hash = "home";
+      setActiveSection("home");
+    }
+
+    window.setTimeout(() => {
+      document.getElementById("composer")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => composerRef.current?.focus(), 250);
+    }, activeSection === "home" ? 0 : 80);
   };
 
   const handleComposerChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -71,32 +113,46 @@ export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
     event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 150)}px`;
   };
 
-  const publishPost = () => {
+  const publishPost = async () => {
     const message = composerValue.trim();
-    if (!message) return;
+    if (!message || isPublishing) return;
 
-    const newPost: Post = {
-      id: `user-${Date.now()}`,
-      initials: currentUser.initials,
-      name: currentUser.name,
-      handle: `@${currentUser.username}`,
-      time: "now",
-      text: message,
-      visual: "none",
-      liked: false,
-      likeCount: 0,
-      comments: "0",
-      isOwn: true,
-    };
+    setIsPublishing(true);
 
-    setPosts((current) => [newPost, ...current]);
-    setComposerValue("");
-    if (composerRef.current) composerRef.current.style.height = "auto";
-    showToast("Your post is live");
+    try {
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: message }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { post?: Post; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.post) {
+        showToast(payload?.error || "Could not publish your post");
+        return;
+      }
+
+      const post = payload.post as Post;
+      setPosts((current) => [post, ...current]);
+      setProfilePosts((current) => [post, ...current]);
+      setUser((current) => ({ ...current, postCount: current.postCount + 1 }));
+      setComposerValue("");
+      if (composerRef.current) composerRef.current.style.height = "auto";
+      showToast("Your post is live");
+    } catch {
+      showToast("Could not publish your post");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const toggleLike = (id: string) => {
-    setPosts((current) => current.map((post) => {
+    const update = (current: Post[]) => current.map((post) => {
       if (post.id !== id) return post;
       const nextLiked = !post.liked;
       return {
@@ -105,7 +161,10 @@ export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
         likeCount: Math.max(post.likeCount + (nextLiked ? 1 : -1), 0),
         displayLikeCount: undefined,
       };
-    }));
+    });
+
+    setPosts(update);
+    setProfilePosts(update);
   };
 
   const toggleBookmark = (id: string) => {
@@ -136,33 +195,65 @@ export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
     showToast(filter === "following" ? "Following feed selected" : "For you feed selected");
   };
 
+  const handleProfileUpdated = (nextUser: CurrentUser) => {
+    setUser(nextUser);
+
+    const refreshOwnPostIdentity = (current: Post[]) => current.map((post) => post.isOwn ? {
+      ...post,
+      initials: nextUser.initials,
+      avatarUrl: nextUser.image,
+      avatarTheme: nextUser.avatarTheme,
+      name: nextUser.name,
+      handle: `@${nextUser.username}`,
+    } : post);
+
+    setPosts(refreshOwnPostIdentity);
+    setProfilePosts(refreshOwnPostIdentity);
+  };
+
+  const centerContent = activeSection === "profile" ? (
+    <ProfileView
+      currentUser={user}
+      posts={profilePosts}
+      bookmarks={bookmarks}
+      onToggleTheme={toggleTheme}
+      onToggleLike={toggleLike}
+      onToggleBookmark={toggleBookmark}
+      onProfileUpdated={handleProfileUpdated}
+      onShowToast={showToast}
+    />
+  ) : (
+    <Feed
+      posts={posts}
+      bookmarks={bookmarks}
+      composerValue={composerValue}
+      composerRef={composerRef}
+      activeFilter={activeFilter}
+      currentUser={user}
+      onToggleTheme={toggleTheme}
+      onComposerChange={handleComposerChange}
+      onPublish={publishPost}
+      isPublishing={isPublishing}
+      onToggleLike={toggleLike}
+      onToggleBookmark={toggleBookmark}
+      onFilterChange={changeFilter}
+    />
+  );
+
   return (
     <>
       <div className="ambient ambient-one"></div>
       <div className="ambient ambient-two"></div>
 
-      <MobileHeader onToggleTheme={toggleTheme} currentUser={currentUser} />
+      <MobileHeader onToggleTheme={toggleTheme} onOpenProfile={openProfile} currentUser={user} />
 
       <div className="app-shell">
-        <Sidebar onFocusComposer={focusComposer} currentUser={currentUser} />
-        <Feed
-          posts={posts}
-          bookmarks={bookmarks}
-          composerValue={composerValue}
-          composerRef={composerRef}
-          activeFilter={activeFilter}
-          currentUser={currentUser}
-          onToggleTheme={toggleTheme}
-          onComposerChange={handleComposerChange}
-          onPublish={publishPost}
-          onToggleLike={toggleLike}
-          onToggleBookmark={toggleBookmark}
-          onFilterChange={changeFilter}
-        />
+        <Sidebar onFocusComposer={focusComposer} currentUser={user} activeSection={activeSection} />
+        {centerContent}
         <RightPanel searchRef={searchRef} following={following} onToggleFollow={toggleFollow} />
       </div>
 
-      <MobileNav onFocusComposer={focusComposer} />
+      <MobileNav onFocusComposer={focusComposer} activeSection={activeSection} />
 
       <div className={`toast${toastVisible ? " show" : ""}`} id="toast" role="status" aria-live="polite">
         {toast}
@@ -170,5 +261,3 @@ export default function GuptoNetworkApp({ currentUser }: GuptoNetworkAppProps) {
     </>
   );
 }
-
-

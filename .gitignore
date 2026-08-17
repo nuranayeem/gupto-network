@@ -23,3 +23,6 @@ pnpm-debug.log*
 
 # TypeScript incremental cache
 *.tsbuildinfo
+# Local profile media (processed files are generated at runtime)
+/public/uploads/profile-media/
+public/uploads/

@@ -16,6 +16,7 @@ type FeedProps = {
   onToggleTheme: () => void;
   onComposerChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onPublish: () => void;
+  isPublishing: boolean;
   onToggleLike: (id: string) => void;
   onToggleBookmark: (id: string) => void;
   onFilterChange: (filter: "for-you" | "following") => void;
@@ -31,6 +32,7 @@ export default function Feed({
   onToggleTheme,
   onComposerChange,
   onPublish,
+  isPublishing,
   onToggleLike,
   onToggleBookmark,
   onFilterChange,
@@ -52,7 +54,7 @@ export default function Feed({
       </section>
 
       <Stories currentUser={currentUser} />
-      <Composer value={composerValue} inputRef={composerRef} currentUser={currentUser} onChange={onComposerChange} onPublish={onPublish} />
+      <Composer value={composerValue} inputRef={composerRef} currentUser={currentUser} onChange={onComposerChange} onPublish={onPublish} isPublishing={isPublishing} />
 
       <section className="feed-filter">
         <button className={`filter${activeFilter === "for-you" ? " active" : ""}`} data-filter="for-you" onClick={() => onFilterChange("for-you")}>For you</button>

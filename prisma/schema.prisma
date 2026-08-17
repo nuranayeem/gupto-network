@@ -8,19 +8,49 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  username      String?   @unique
-  name          String?
-  bio           String?
-  image         String?
-  passwordHash  String?
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                    String                 @id @default(cuid())
+  email                 String                 @unique
+  aboutEmail            String?
+  aboutEmailVisible     Boolean                @default(true)
+  phoneNumber           String?
+  username              String?                @unique
+  name                  String?
+  bio                   String?
+  image                  String?
+  coverImage             String?
+  location               String?
+  hometown               String?
+  school                 String?
+  college                String?
+  university             String?
+  relationshipStatus     String?
+  gender                 String?
+  workplaces             Json                   @default("[]")
+  interests              String[]               @default([])
+  socialLinks            String[]               @default([])
+  website                String?
+  avatarTheme            String                 @default("midnight")
+  birthDate              DateTime?              @db.Date
+  category               String?
+  passwordHash          String?
+  emailVerified         DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
   passwordResetRequests PasswordResetRequest[]
+  posts                 Post[]
 }
 
+model Post {
+  id        String   @id @default(cuid())
+  authorId  String
+  text      String   @db.VarChar(280)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([createdAt])
+}
 
 model PendingSignup {
   id             String   @id @default(cuid())
@@ -39,7 +69,6 @@ model PendingSignup {
 
   @@index([expiresAt])
 }
-
 
 model PasswordResetRequest {
   id                  String   @id @default(cuid())
