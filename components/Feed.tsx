@@ -17,8 +17,12 @@ type FeedProps = {
   onComposerChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onPublish: () => void;
   isPublishing: boolean;
-  onToggleLike: (id: string) => void;
+  onToggleLike: (id: string) => Promise<void> | void;
   onToggleBookmark: (id: string) => void;
+  onPostUpdated: (id: string, changes: Partial<Post>) => void;
+  onPostDeleted: (id: string) => void;
+  onCommentCountChange: (id: string, count: number) => void;
+  onShowToast: (message: string) => void;
   onFilterChange: (filter: "for-you" | "following") => void;
 };
 
@@ -35,6 +39,10 @@ export default function Feed({
   isPublishing,
   onToggleLike,
   onToggleBookmark,
+  onPostUpdated,
+  onPostDeleted,
+  onCommentCountChange,
+  onShowToast,
   onFilterChange,
 }: FeedProps) {
   return (
@@ -70,6 +78,10 @@ export default function Feed({
             bookmarked={bookmarks.has(post.id)}
             onToggleLike={onToggleLike}
             onToggleBookmark={onToggleBookmark}
+            onPostUpdated={onPostUpdated}
+            onPostDeleted={onPostDeleted}
+            onCommentCountChange={onCommentCountChange}
+            onShowToast={onShowToast}
           />
         ))}
       </section>

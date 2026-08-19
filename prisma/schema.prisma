@@ -18,6 +18,9 @@ model User {
   bio                   String?
   image                  String?
   coverImage             String?
+  coverPositionX         Float                  @default(0)
+  coverPositionY         Float                  @default(0)
+  coverZoom              Float                  @default(1)
   location               String?
   hometown               String?
   school                 String?
@@ -38,18 +41,151 @@ model User {
   updatedAt             DateTime               @updatedAt
   passwordResetRequests PasswordResetRequest[]
   posts                 Post[]
+  postReactions         PostReaction[]
+  postComments          PostComment[]
+  postReplies           PostReply[]
+  commentReactions      CommentReaction[]
+  replyReactions        ReplyReaction[]
+  sentFriendships       Friendship[]           @relation("FriendshipRequester")
+  receivedFriendships   Friendship[]           @relation("FriendshipAddressee")
+}
+
+enum PostVisibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  CARE
+  HAHA
+  WOW
+  SAD
+  ANGRY
+  SANDAL
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
 }
 
 model Post {
-  id        String   @id @default(cuid())
-  authorId  String
-  text      String   @db.VarChar(280)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  id         String         @id @default(cuid())
+  authorId   String
+  text       String         @db.VarChar(280)
+  visibility PostVisibility @default(PUBLIC)
+  editedAt   DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  author     User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions  PostReaction[]
+  comments   PostComment[]
 
   @@index([authorId])
+  @@index([visibility])
   @@index([createdAt])
+}
+
+model PostReaction {
+  id        String       @id @default(cuid())
+  postId    String
+  userId    String
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+  @@index([postId, createdAt])
+}
+
+model PostComment {
+  id        String      @id @default(cuid())
+  postId    String
+  authorId  String
+  text      String      @db.VarChar(500)
+  editedAt  DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  post      Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies   PostReply[]
+  reactions CommentReaction[]
+
+  @@index([postId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model PostReply {
+  id            String      @id @default(cuid())
+  commentId     String
+  authorId      String
+  parentReplyId String?
+  text          String      @db.VarChar(500)
+  editedAt      DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  comment       PostComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentReply   PostReply?   @relation("ReplyThread", fields: [parentReplyId], references: [id], onDelete: Cascade)
+  childReplies  PostReply[]  @relation("ReplyThread")
+  reactions     ReplyReaction[]
+
+  @@index([commentId, createdAt])
+  @@index([parentReplyId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+
+model CommentReaction {
+  id        String       @id @default(cuid())
+  commentId String
+  userId    String
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  comment   PostComment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model ReplyReaction {
+  id        String       @id @default(cuid())
+  replyId   String
+  userId    String
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  reply     PostReply    @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([replyId, userId])
+  @@index([replyId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  requester   User             @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User             @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@index([requesterId, status])
 }
 
 model PendingSignup {

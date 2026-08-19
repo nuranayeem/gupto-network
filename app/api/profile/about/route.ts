@@ -110,6 +110,9 @@ const userSelect = {
   website: true,
   image: true,
   coverImage: true,
+  coverPositionX: true,
+  coverPositionY: true,
+  coverZoom: true,
   avatarTheme: true,
   birthDate: true,
   category: true,
@@ -138,6 +141,9 @@ function toCurrentUser(user: {
   website: string | null;
   image: string | null;
   coverImage: string | null;
+  coverPositionX: number;
+  coverPositionY: number;
+  coverZoom: number;
   avatarTheme: string;
   birthDate: Date | null;
   category: string | null;
@@ -169,6 +175,9 @@ function toCurrentUser(user: {
     website: user.website || "",
     image: user.image,
     coverImage: user.coverImage,
+    coverPositionX: user.coverPositionX,
+    coverPositionY: user.coverPositionY,
+    coverZoom: user.coverZoom,
     avatarTheme: user.avatarTheme,
     birthDate: user.birthDate ? user.birthDate.toISOString().slice(0, 10) : "",
     category: user.category || "",

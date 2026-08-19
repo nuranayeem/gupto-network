@@ -11,6 +11,35 @@ import {
 
 export const runtime = "nodejs";
 
+const COVER_POSITION_MIN = -50;
+const COVER_POSITION_MAX = 50;
+const COVER_ZOOM_MIN = 1;
+const COVER_ZOOM_MAX = 3;
+
+type CoverAdjustment = {
+  x: number;
+  y: number;
+  zoom: number;
+};
+
+function readCoverAdjustment(formData: FormData): CoverAdjustment | null | undefined {
+  const keys = ["coverPositionX", "coverPositionY", "coverZoom"] as const;
+  const hasAny = keys.some((key) => formData.has(key));
+  if (!hasAny) return null;
+  if (!keys.every((key) => formData.has(key))) return undefined;
+
+  const x = Number(formData.get("coverPositionX"));
+  const y = Number(formData.get("coverPositionY"));
+  const zoom = Number(formData.get("coverZoom"));
+
+  if (![x, y, zoom].every(Number.isFinite)) return undefined;
+  if (x < COVER_POSITION_MIN || x > COVER_POSITION_MAX) return undefined;
+  if (y < COVER_POSITION_MIN || y > COVER_POSITION_MAX) return undefined;
+  if (zoom < COVER_ZOOM_MIN || zoom > COVER_ZOOM_MAX) return undefined;
+
+  return { x, y, zoom };
+}
+
 export async function POST(request: Request) {
   const session = await auth();
   const email = session?.user?.email?.trim().toLowerCase();
@@ -25,6 +54,9 @@ export async function POST(request: Request) {
       id: true,
       image: true,
       coverImage: true,
+      coverPositionX: true,
+      coverPositionY: true,
+      coverZoom: true,
     },
   });
 
@@ -41,16 +73,25 @@ export async function POST(request: Request) {
   const coverValue = formData.get("cover");
   const removeProfile = formData.get("removeProfile") === "1";
   const removeCover = formData.get("removeCover") === "1";
+  const coverAdjustment = readCoverAdjustment(formData);
+
+  if (coverAdjustment === undefined) {
+    return NextResponse.json({ error: "Could not save the cover photo position." }, { status: 400 });
+  }
 
   const profileFile = profileValue instanceof File && profileValue.size > 0 ? profileValue : null;
   const coverFile = coverValue instanceof File && coverValue.size > 0 ? coverValue : null;
+  const hasCoverAdjustment = coverAdjustment !== null;
 
-  if (!profileFile && !coverFile && !removeProfile && !removeCover) {
+  if (!profileFile && !coverFile && !removeProfile && !removeCover && !hasCoverAdjustment) {
     return NextResponse.json({ error: "Choose a profile or cover photo first." }, { status: 400 });
   }
 
   let nextImage = user.image;
   let nextCoverImage = user.coverImage;
+  let nextCoverPositionX = user.coverPositionX;
+  let nextCoverPositionY = user.coverPositionY;
+  let nextCoverZoom = user.coverZoom;
   let newProfilePath: string | null = null;
   let newCoverPath: string | null = null;
 
@@ -69,8 +110,23 @@ export async function POST(request: Request) {
       const written = await writeProfileMedia(user.id, "cover", prepared);
       nextCoverImage = written.url;
       newCoverPath = written.filePath;
+
+      if (!hasCoverAdjustment) {
+        nextCoverPositionX = 0;
+        nextCoverPositionY = 0;
+        nextCoverZoom = 1;
+      }
     } else if (removeCover) {
       nextCoverImage = null;
+      nextCoverPositionX = 0;
+      nextCoverPositionY = 0;
+      nextCoverZoom = 1;
+    }
+
+    if (coverAdjustment && !removeCover) {
+      nextCoverPositionX = coverAdjustment.x;
+      nextCoverPositionY = coverAdjustment.y;
+      nextCoverZoom = coverAdjustment.zoom;
     }
 
     const updated = await prisma.user.update({
@@ -78,10 +134,16 @@ export async function POST(request: Request) {
       data: {
         image: nextImage,
         coverImage: nextCoverImage,
+        coverPositionX: nextCoverPositionX,
+        coverPositionY: nextCoverPositionY,
+        coverZoom: nextCoverZoom,
       },
       select: {
         image: true,
         coverImage: true,
+        coverPositionX: true,
+        coverPositionY: true,
+        coverZoom: true,
       },
     });
 
@@ -95,6 +157,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       image: updated.image,
       coverImage: updated.coverImage,
+      coverPositionX: updated.coverPositionX,
+      coverPositionY: updated.coverPositionY,
+      coverZoom: updated.coverZoom,
     });
   } catch (error) {
     await Promise.all([

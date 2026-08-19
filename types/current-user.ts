@@ -27,6 +27,9 @@ export type CurrentUser = {
   website: string;
   image: string | null;
   coverImage: string | null;
+  coverPositionX: number;
+  coverPositionY: number;
+  coverZoom: number;
   avatarTheme: AvatarTheme;
   birthDate: string;
   category: string;

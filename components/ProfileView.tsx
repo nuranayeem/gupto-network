@@ -19,8 +19,11 @@ type ProfileViewProps = {
   posts: Post[];
   bookmarks: Set<string>;
   onToggleTheme: () => void;
-  onToggleLike: (id: string) => void;
+  onToggleLike: (id: string) => Promise<void> | void;
   onToggleBookmark: (id: string) => void;
+  onPostUpdated: (id: string, changes: Partial<Post>) => void;
+  onPostDeleted: (id: string) => void;
+  onCommentCountChange: (id: string, count: number) => void;
   onProfileUpdated: (user: CurrentUser) => void;
   onShowToast: (message: string) => void;
 };
@@ -124,12 +127,48 @@ const DEFAULT_AVATAR_ADJUSTMENT: AvatarAdjustment = {
   zoom: 1,
 };
 
+const COVER_POSITION_MIN = -50;
+const COVER_POSITION_MAX = 50;
+const COVER_ZOOM_MIN = 1;
+const COVER_ZOOM_MAX = 3;
+const COVER_NUDGE = 3;
+
+type CoverAdjustment = {
+  x: number;
+  y: number;
+  zoom: number;
+};
+
+const DEFAULT_COVER_ADJUSTMENT: CoverAdjustment = {
+  x: 0,
+  y: 0,
+  zoom: 1,
+};
+
 
 type FontAwesomeCategoryIconDefinition = {
   width: number;
   height: number;
   path: string;
 };
+
+function FontAwesomeEditIcon() {
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+      {/* Same Font Awesome Pen To Square icon used by the About row actions. */}
+      <path d="M490.3 40.4C512.2 62.27 512.2 97.73 490.3 119.6L460.3 149.7L362.3 51.72L392.4 21.66C414.3-.2135 449.7-.2135 471.6 21.66L490.3 40.4zM172.4 241.7L339.7 74.34L437.7 172.3L270.3 339.6C264.2 345.8 256.7 350.4 248.4 353.2L159.6 382.8C150.1 385.6 141.5 383.4 135 376.1C128.6 370.5 126.4 361 129.2 352.4L158.8 263.6C161.6 255.3 166.2 247.8 172.4 241.7V241.7zM192 63.1C209.7 63.1 224 78.33 224 95.1C224 113.7 209.7 127.1 192 127.1H96C78.33 127.1 64 142.3 64 159.1V416C64 433.7 78.33 448 96 448H352C369.7 448 384 433.7 384 416V319.1C384 302.3 398.3 287.1 416 287.1C433.7 287.1 448 302.3 448 319.1V416C448 469 405 512 352 512H96C42.98 512 0 469 0 416V159.1C0 106.1 42.98 63.1 96 63.1H192z" />
+    </svg>
+  );
+}
+
+function FontAwesomeDeleteIcon() {
+  return (
+    <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+      {/* Same Font Awesome Trash Can icon used by the About row actions. */}
+      <path d="M135.2 17.69C140.6 6.848 151.7 0 163.8 0H284.2C296.3 0 307.4 6.848 312.8 17.69L320 32H416C433.7 32 448 46.33 448 64C448 81.67 433.7 96 416 96H32C14.33 96 0 81.67 0 64C0 46.33 14.33 32 32 32H128L135.2 17.69zM31.1 128H416V448C416 483.3 387.3 512 352 512H95.1C60.65 512 31.1 483.3 31.1 448V128zM111.1 208V432C111.1 440.8 119.2 448 127.1 448C136.8 448 143.1 440.8 143.1 432V208C143.1 199.2 136.8 192 127.1 192C119.2 192 111.1 199.2 111.1 208zM207.1 208V432C207.1 440.8 215.2 448 223.1 448C232.8 448 240 440.8 240 432V208C240 199.2 232.8 192 223.1 192C215.2 192 207.1 199.2 207.1 208zM304 208V432C304 440.8 311.2 448 320 448C328.8 448 336 440.8 336 432V208C336 199.2 328.8 192 320 192C311.2 192 304 199.2 304 208z" />
+    </svg>
+  );
+}
 
 // Font Awesome Free (solid) category icons are embedded as SVG path data so the
 // profile badge gets genuine Font Awesome artwork without adding a runtime
@@ -657,6 +696,26 @@ function avatarAdjustmentChanged(adjustment: AvatarAdjustment) {
   );
 }
 
+function clampCoverAdjustment(adjustment: CoverAdjustment): CoverAdjustment {
+  return {
+    x: clamp(adjustment.x, COVER_POSITION_MIN, COVER_POSITION_MAX),
+    y: clamp(adjustment.y, COVER_POSITION_MIN, COVER_POSITION_MAX),
+    zoom: clamp(adjustment.zoom, COVER_ZOOM_MIN, COVER_ZOOM_MAX),
+  };
+}
+
+function coverAdjustmentChanged(adjustment: CoverAdjustment, baseline: CoverAdjustment) {
+  return (
+    Math.abs(adjustment.x - baseline.x) > 0.01 ||
+    Math.abs(adjustment.y - baseline.y) > 0.01 ||
+    Math.abs(adjustment.zoom - baseline.zoom) > 0.001
+  );
+}
+
+function coverTransform(adjustment: CoverAdjustment) {
+  return `translate3d(${adjustment.x}%, ${adjustment.y}%, 0) scale(${adjustment.zoom})`;
+}
+
 async function createAdjustedProfileFile(
   original: File,
   previewUrl: string,
@@ -748,6 +807,15 @@ function formatBirthDate(value: string) {
 
 function buildPreviewUrl(file: File) {
   return browserPreviewTypes.has(file.type.toLowerCase()) ? URL.createObjectURL(file) : "";
+}
+
+function fileNameFromMediaUrl(value: string, fallback: string) {
+  try {
+    const url = new URL(value, window.location.origin);
+    return url.pathname.split("/").filter(Boolean).pop() || fallback;
+  } catch {
+    return value.split("?")[0].split("/").filter(Boolean).pop() || fallback;
+  }
 }
 
 
@@ -1921,6 +1989,59 @@ function AppleBirthDatePicker({
   );
 }
 
+type ProfileTab = "posts" | "about" | "react" | "comment" | "reply";
+type ProfileActivityTab = Exclude<ProfileTab, "posts" | "about">;
+
+type ProfileActivityItem = {
+  id: string;
+  kind: ProfileActivityTab;
+  label: string;
+  text: string;
+  context?: string;
+  postContext?: string;
+  createdAt: string;
+  postId: string;
+  postAuthor: string;
+};
+
+function activityTime(value: string) {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
+
+function ProfileActivityPanel({ tab, items, loading, error }: {
+  tab: ProfileActivityTab;
+  items: ProfileActivityItem[];
+  loading: boolean;
+  error: string;
+}) {
+  const emptyCopy = tab === "react"
+    ? "Posts you react to will appear here."
+    : tab === "comment"
+      ? "Comments you write will appear here."
+      : "Replies you write will appear here.";
+
+  if (loading) return <div className="profile-activity-empty card">Loading {tab} activity…</div>;
+  if (error) return <div className="profile-activity-empty card">{error}</div>;
+  if (!items.length) return <div className="profile-activity-empty card"><strong>No {tab} activity yet</strong><span>{emptyCopy}</span></div>;
+
+  return (
+    <section className="profile-activity-list">
+      {items.map((item) => (
+        <article className="profile-activity-card card" key={item.id}>
+          <div className={`profile-activity-kind ${item.kind}`}>{item.kind === "react" ? "♥" : item.kind === "comment" ? "◌" : "↳"}</div>
+          <div className="profile-activity-copy">
+            <div><strong>{item.label === "LIKE" ? "Liked a post" : item.label}</strong><small>{activityTime(item.createdAt)}</small></div>
+            <p>{item.text}</p>
+            {item.context ? <blockquote>{item.kind === "reply" ? "Comment: " : "Post: "}{item.context}</blockquote> : null}
+            {item.postContext ? <blockquote>Post: {item.postContext}</blockquote> : null}
+            <span>On {item.postAuthor}&apos;s post</span>
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 export default function ProfileView({
   currentUser,
   posts,
@@ -1928,10 +2049,16 @@ export default function ProfileView({
   onToggleTheme,
   onToggleLike,
   onToggleBookmark,
+  onPostUpdated,
+  onPostDeleted,
+  onCommentCountChange,
   onProfileUpdated,
   onShowToast,
 }: ProfileViewProps) {
-  const [tab, setTab] = useState<"posts" | "about">("posts");
+  const [tab, setTab] = useState<ProfileTab>("posts");
+  const [activityItems, setActivityItems] = useState<Partial<Record<ProfileActivityTab, ProfileActivityItem[]>>>({});
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState("");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -1946,6 +2073,22 @@ export default function ProfileView({
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState("");
   const [coverPreview, setCoverPreview] = useState("");
+  const [coverAdjustOpen, setCoverAdjustOpen] = useState(false);
+  const coverHeroRef = useRef<HTMLDivElement>(null);
+  const [coverPreviewAspectRatio, setCoverPreviewAspectRatio] = useState(3);
+  const [coverAdjustment, setCoverAdjustment] = useState<CoverAdjustment>(() => ({
+    x: currentUser.coverPositionX,
+    y: currentUser.coverPositionY,
+    zoom: currentUser.coverZoom,
+  }));
+  const coverDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    stageWidth: number;
+    stageHeight: number;
+    origin: CoverAdjustment;
+  } | null>(null);
   const [avatarAdjustOpen, setAvatarAdjustOpen] = useState(false);
   const [avatarAdjustment, setAvatarAdjustment] = useState<AvatarAdjustment>(DEFAULT_AVATAR_ADJUSTMENT);
   const [avatarNaturalSize, setAvatarNaturalSize] = useState<ImageNaturalSize>({ width: 0, height: 0 });
@@ -1984,6 +2127,58 @@ export default function ProfileView({
   const aboutEmail = currentUser.aboutEmailVisible
     ? currentUser.aboutEmail || currentUser.email
     : "";
+
+  useEffect(() => {
+    if (tab !== "react" && tab !== "comment" && tab !== "reply") return;
+
+    let cancelled = false;
+    setActivityLoading(true);
+    setActivityError("");
+
+    fetch(`/api/profile/activity?type=${tab}`, { cache: "no-store" })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as { items?: ProfileActivityItem[]; error?: string } | null;
+        if (!response.ok || !payload?.items) throw new Error(payload?.error || "Could not load profile activity.");
+        if (!cancelled) setActivityItems((current) => ({ ...current, [tab]: payload.items! }));
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setActivityError(error instanceof Error ? error.message : "Could not load profile activity.");
+      })
+      .finally(() => {
+        if (!cancelled) setActivityLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tab]);
+
+  useEffect(() => {
+    const cover = coverHeroRef.current;
+    if (!cover) return;
+
+    const syncCoverPreviewAspectRatio = () => {
+      const rect = cover.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setCoverPreviewAspectRatio(rect.width / rect.height);
+      }
+    };
+
+    syncCoverPreviewAspectRatio();
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(syncCoverPreviewAspectRatio)
+        : null;
+
+    resizeObserver?.observe(cover);
+    window.addEventListener("resize", syncCoverPreviewAspectRatio);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", syncCoverPreviewAspectRatio);
+    };
+  }, []);
 
   const getAboutValue = (field: AboutField): string => {
     if (field === "email") return currentUser.aboutEmail || currentUser.email;
@@ -2150,6 +2345,9 @@ export default function ProfileView({
     releasePreview("cover");
     setProfileFile(null);
     setCoverFile(null);
+    setCoverAdjustOpen(false);
+    setCoverAdjustment(DEFAULT_COVER_ADJUSTMENT);
+    coverDragRef.current = null;
     setAvatarAdjustOpen(false);
     setAvatarAdjustment(DEFAULT_AVATAR_ADJUSTMENT);
     setAvatarNaturalSize({ width: 0, height: 0 });
@@ -2187,6 +2385,11 @@ export default function ProfileView({
       category: currentUser.category,
     });
     resetMediaDraft();
+    setCoverAdjustment({
+      x: currentUser.coverPositionX,
+      y: currentUser.coverPositionY,
+      zoom: currentUser.coverZoom,
+    });
     setFormError("");
     setEditing(true);
   };
@@ -2209,11 +2412,16 @@ export default function ProfileView({
       setAvatarAdjustment(DEFAULT_AVATAR_ADJUSTMENT);
       setAvatarNaturalSize({ width: 0, height: 0 });
       setAvatarAdjustOpen(Boolean(preview && adjustableProfileTypes.has(file.type.toLowerCase())));
+      setCoverAdjustOpen(false);
       setRemoveProfilePhoto(false);
     } else {
       releasePreview("cover");
       setCoverFile(file);
       setCoverPreview(preview);
+      setCoverAdjustment(DEFAULT_COVER_ADJUSTMENT);
+      coverDragRef.current = null;
+      setCoverAdjustOpen(Boolean(preview));
+      setAvatarAdjustOpen(false);
       setRemoveCoverPhoto(false);
     }
   };
@@ -2232,8 +2440,29 @@ export default function ProfileView({
     } else {
       releasePreview("cover");
       setCoverFile(null);
+      setCoverAdjustOpen(false);
+      setCoverAdjustment(DEFAULT_COVER_ADJUSTMENT);
+      coverDragRef.current = null;
       setRemoveCoverPhoto(Boolean(currentUser.coverImage));
     }
+  };
+
+  const currentProfilePhotoAsFile = async () => {
+    if (profileFile) return profileFile;
+    if (!currentUser.image) return null;
+
+    const response = await fetch(currentUser.image, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Could not load the current profile photo.");
+    }
+
+    const blob = await response.blob();
+    const filename = fileNameFromMediaUrl(currentUser.image, "profile-photo.jpg");
+
+    return new File([blob], filename, {
+      type: blob.type || "image/jpeg",
+      lastModified: Date.now(),
+    });
   };
 
   const saveProfile = async () => {
@@ -2258,21 +2487,52 @@ export default function ProfileView({
       }
 
       let nextUser = payload.user;
-      const mediaChanged = Boolean(profileFile || coverFile || removeProfilePhoto || removeCoverPhoto);
+      const savedCoverAdjustment: CoverAdjustment = {
+        x: currentUser.coverPositionX,
+        y: currentUser.coverPositionY,
+        zoom: currentUser.coverZoom,
+      };
+      const coverPositionChanged = Boolean(
+        !removeCoverPhoto &&
+        (coverFile || currentUser.coverImage) &&
+        coverAdjustmentChanged(
+          coverAdjustment,
+          coverFile ? DEFAULT_COVER_ADJUSTMENT : savedCoverAdjustment,
+        ),
+      );
+      const profilePositionChanged = Boolean(
+        !removeProfilePhoto &&
+        (profileFile || currentUser.image) &&
+        avatarAdjustmentChanged(avatarAdjustment)
+      );
+      const mediaChanged = Boolean(
+        profileFile ||
+        profilePositionChanged ||
+        coverFile ||
+        removeProfilePhoto ||
+        removeCoverPhoto ||
+        coverPositionChanged
+      );
 
       if (mediaChanged) {
         const mediaForm = new FormData();
-        if (profileFile) {
-          let profileUpload = profileFile;
+        if (profileFile || profilePositionChanged) {
+          const sourceProfileFile = await currentProfilePhotoAsFile();
+
+          if (!sourceProfileFile) {
+            throw new Error("Could not load the profile photo for adjustment.");
+          }
+
+          let profileUpload = sourceProfileFile;
+          const adjustmentPreviewUrl = profilePreview || currentUser.image || "";
 
           if (
-            profilePreview &&
-            adjustableProfileTypes.has(profileFile.type.toLowerCase()) &&
+            adjustmentPreviewUrl &&
             avatarAdjustmentChanged(avatarAdjustment)
           ) {
             profileUpload = await createAdjustedProfileFile(
-              profileFile,
-              profilePreview,
+              sourceProfileFile,
+              adjustmentPreviewUrl,
               avatarNaturalSize,
               avatarAdjustment,
             );
@@ -2281,6 +2541,11 @@ export default function ProfileView({
           mediaForm.append("profile", profileUpload);
         }
         if (coverFile) mediaForm.append("cover", coverFile);
+        if ((coverFile || coverPositionChanged) && !removeCoverPhoto) {
+          mediaForm.append("coverPositionX", String(coverAdjustment.x));
+          mediaForm.append("coverPositionY", String(coverAdjustment.y));
+          mediaForm.append("coverZoom", String(coverAdjustment.zoom));
+        }
         if (removeProfilePhoto) mediaForm.append("removeProfile", "1");
         if (removeCoverPhoto) mediaForm.append("removeCover", "1");
 
@@ -2289,7 +2554,14 @@ export default function ProfileView({
           body: mediaForm,
         });
         const mediaPayload = (await mediaResponse.json().catch(() => null)) as
-          | { image?: string | null; coverImage?: string | null; error?: string }
+          | {
+              image?: string | null;
+              coverImage?: string | null;
+              coverPositionX?: number;
+              coverPositionY?: number;
+              coverZoom?: number;
+              error?: string;
+            }
           | null;
 
         if (!mediaResponse.ok || !mediaPayload) {
@@ -2302,6 +2574,9 @@ export default function ProfileView({
           ...nextUser,
           image: mediaPayload.image ?? null,
           coverImage: mediaPayload.coverImage ?? null,
+          coverPositionX: mediaPayload.coverPositionX ?? nextUser.coverPositionX,
+          coverPositionY: mediaPayload.coverPositionY ?? nextUser.coverPositionY,
+          coverZoom: mediaPayload.coverZoom ?? nextUser.coverZoom,
         };
       }
 
@@ -2320,12 +2595,36 @@ export default function ProfileView({
   const coverDisplayUrl = coverPreview || (!removeCoverPhoto ? currentUser.coverImage || "" : "");
   const profileNeedsConversionPreview = Boolean(profileFile && !profilePreview);
   const coverNeedsConversionPreview = Boolean(coverFile && !coverPreview);
+  const coverIsAdjustable = Boolean(coverDisplayUrl && !coverNeedsConversionPreview);
   const profileIsAdjustable = Boolean(
-    profileFile &&
-    profilePreview &&
-    adjustableProfileTypes.has(profileFile.type.toLowerCase()),
+    profileDisplayUrl &&
+    !profileNeedsConversionPreview &&
+    (!profileFile || adjustableProfileTypes.has(profileFile.type.toLowerCase())),
   );
   const avatarGeometry = getAvatarGeometry(avatarNaturalSize, avatarAdjustment);
+
+  const updateCoverAdjustment = (next: CoverAdjustment) => {
+    setCoverAdjustment(clampCoverAdjustment(next));
+  };
+
+  const nudgeCover = (x: number, y: number) => {
+    setCoverAdjustment((current) =>
+      clampCoverAdjustment({
+        ...current,
+        x: current.x + x,
+        y: current.y + y,
+      }),
+    );
+  };
+
+  const zoomCover = (delta: number) => {
+    setCoverAdjustment((current) =>
+      clampCoverAdjustment({
+        ...current,
+        zoom: current.zoom + delta,
+      }),
+    );
+  };
 
   const updateAvatarAdjustment = (next: AvatarAdjustment) => {
     setAvatarAdjustment(clampAvatarAdjustment(next, avatarNaturalSize));
@@ -2373,11 +2672,23 @@ export default function ProfileView({
       </section>
 
       <section className="profile-hero card">
-        <div className={`profile-cover${currentUser.coverImage ? " has-photo" : ""}`} aria-label={currentUser.coverImage ? "Cover photo" : undefined}>
+        <div ref={coverHeroRef} className={`profile-cover${currentUser.coverImage ? " has-photo" : ""}`} aria-label={currentUser.coverImage ? "Cover photo" : undefined}>
           {currentUser.coverImage ? (
             <>
               <img className="profile-cover-photo-bg" src={currentUser.coverImage} alt="" aria-hidden="true" />
-              <img className="profile-cover-photo-main" src={currentUser.coverImage} alt="" />
+              <img
+                className="profile-cover-photo-main"
+                src={currentUser.coverImage}
+                alt=""
+                style={{
+                  transform: coverTransform({
+                    x: currentUser.coverPositionX,
+                    y: currentUser.coverPositionY,
+                    zoom: currentUser.coverZoom,
+                  }),
+                  transformOrigin: "50% 50%",
+                }}
+              />
             </>
           ) : (
             <><span></span><span></span><span></span></>
@@ -2440,8 +2751,11 @@ export default function ProfileView({
       </section>
 
       <section className="profile-tabs" aria-label="Profile sections">
-        <button className={tab === "posts" ? "active" : ""} type="button" onClick={() => setTab("posts")}>Posts</button>
+        <button className={tab === "posts" ? "active" : ""} type="button" onClick={() => setTab("posts")}>Post</button>
         <button className={tab === "about" ? "active" : ""} type="button" onClick={() => setTab("about")}>About</button>
+        <button className={tab === "react" ? "active" : ""} type="button" onClick={() => setTab("react")}>React</button>
+        <button className={tab === "comment" ? "active" : ""} type="button" onClick={() => setTab("comment")}>Comment</button>
+        <button className={tab === "reply" ? "active" : ""} type="button" onClick={() => setTab("reply")}>Reply</button>
         <span></span>
       </section>
 
@@ -2454,16 +2768,28 @@ export default function ProfileView({
               bookmarked={bookmarks.has(post.id)}
               onToggleLike={onToggleLike}
               onToggleBookmark={onToggleBookmark}
+              onPostUpdated={onPostUpdated}
+              onPostDeleted={onPostDeleted}
+              onCommentCountChange={onCommentCountChange}
+              onShowToast={onShowToast}
             />
           )) : (
             <div className="profile-empty card">
-              <span>✦</span>
+              <div className="profile-empty-sad" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="presentation">
+                  <circle className="profile-empty-sad-face" cx="24" cy="24" r="16.5" />
+                  <ellipse className="profile-empty-sad-eye profile-empty-sad-eye-left" cx="18.5" cy="21" rx="1.8" ry="2.4" />
+                  <ellipse className="profile-empty-sad-eye profile-empty-sad-eye-right" cx="29.5" cy="21" rx="1.8" ry="2.4" />
+                  <path className="profile-empty-sad-mouth" d="M17.5 31c1.8-3 4-4.4 6.5-4.4s4.7 1.4 6.5 4.4" />
+                  <path className="profile-empty-sad-tear" d="M32.5 24.8c0 0-2.4 3.1-2.4 4.7a2.4 2.4 0 0 0 4.8 0c0-1.6-2.4-4.7-2.4-4.7z" />
+                </svg>
+              </div>
               <h3>No posts yet</h3>
               <p>Your posts will appear here after you publish them.</p>
             </div>
           )}
         </section>
-      ) : (
+      ) : tab === "about" ? (
         currentUser.bio ||
         currentUser.gender ||
         currentUser.category ||
@@ -2647,7 +2973,13 @@ export default function ProfileView({
             ) : null}
           </section>
         ) : null
-
+      ) : (
+        <ProfileActivityPanel
+          tab={tab as ProfileActivityTab}
+          items={activityItems[tab as ProfileActivityTab] || []}
+          loading={activityLoading}
+          error={activityError}
+        />
       )}
 
       {aboutField ? (
@@ -2837,7 +3169,15 @@ export default function ProfileView({
                   {coverDisplayUrl ? (
                     <>
                       <img className="profile-media-preview-bg" src={coverDisplayUrl} alt="" aria-hidden="true" />
-                      <img className="profile-media-preview-main" src={coverDisplayUrl} alt="Cover preview" />
+                      <img
+                        className="profile-media-preview-main"
+                        src={coverDisplayUrl}
+                        alt="Cover preview"
+                        style={{
+                          transform: coverTransform(coverAdjustment),
+                          transformOrigin: "50% 50%",
+                        }}
+                      />
                     </>
                   ) : coverNeedsConversionPreview ? (
                     <div className="profile-media-file-ready"><b>✓</b><span>{coverFile?.name}</span><small>Ready to save exactly as uploaded</small></div>
@@ -2846,10 +3186,35 @@ export default function ProfileView({
                   )}
                 </div>
                 <div className="profile-media-copy">
-                  <div><strong>Cover photo</strong><small>Saved in the same quality you upload.</small></div>
+                  <div><strong>Cover photo</strong><small>{coverDisplayUrl ? "Saved in the same quality you upload." : "Recommended cover: 1500 × 500 px (3:1). Exact fit on all devices at 100% / Reset."}</small></div>
                   <div className="profile-media-buttons">
                     <button type="button" onClick={() => coverInputRef.current?.click()}>Choose photo</button>
-                    {(coverFile || currentUser.coverImage) ? <button className="muted" type="button" onClick={() => removeMedia("cover")}>Remove</button> : null}
+                    {coverIsAdjustable ? (
+                      <button
+                        className="muted profile-media-icon-button"
+                        type="button"
+                        aria-label="Adjust cover photo"
+                        title="Adjust cover photo"
+                        aria-expanded={coverAdjustOpen}
+                        onClick={() => {
+                          setCoverAdjustOpen((current) => !current);
+                          setAvatarAdjustOpen(false);
+                        }}
+                      >
+                        <FontAwesomeEditIcon />
+                      </button>
+                    ) : null}
+                    {(coverFile || currentUser.coverImage) ? (
+                      <button
+                        className="muted profile-media-icon-button"
+                        type="button"
+                        aria-label="Remove cover photo"
+                        title="Remove cover photo"
+                        onClick={() => removeMedia("cover")}
+                      >
+                        <FontAwesomeDeleteIcon />
+                      </button>
+                    ) : null}
                   </div>
                 </div>
                 <input
@@ -2882,15 +3247,30 @@ export default function ProfileView({
                     <button type="button" onClick={() => profileInputRef.current?.click()}>Choose photo</button>
                     {profileIsAdjustable ? (
                       <button
-                        className="muted"
+                        className="muted profile-media-icon-button"
                         type="button"
+                        aria-label="Adjust profile photo"
+                        title="Adjust profile photo"
                         aria-expanded={avatarAdjustOpen}
-                        onClick={() => setAvatarAdjustOpen((current) => !current)}
+                        onClick={() => {
+                          setAvatarAdjustOpen((current) => !current);
+                          setCoverAdjustOpen(false);
+                        }}
                       >
-                        Adjust
+                        <FontAwesomeEditIcon />
                       </button>
                     ) : null}
-                    {(profileFile || currentUser.image) ? <button className="muted" type="button" onClick={() => removeMedia("profile")}>Remove</button> : null}
+                    {(profileFile || currentUser.image) ? (
+                      <button
+                        className="muted profile-media-icon-button"
+                        type="button"
+                        aria-label="Remove profile photo"
+                        title="Remove profile photo"
+                        onClick={() => removeMedia("profile")}
+                      >
+                        <FontAwesomeDeleteIcon />
+                      </button>
+                    ) : null}
                   </div>
                 </div>
                 <input
@@ -2904,6 +3284,110 @@ export default function ProfileView({
                 />
               </section>
             </div>
+
+            {coverIsAdjustable && coverAdjustOpen ? (
+              <section className="profile-cover-adjust-panel" aria-label="Adjust cover photo">
+                <div className="profile-cover-adjust-stage-wrap">
+                  <div
+                    className="profile-cover-crop-stage"
+                    style={{ aspectRatio: coverPreviewAspectRatio }}
+                    role="application"
+                    aria-label="Cover photo preview. Drag the photo to reposition it."
+                    onPointerDown={(event) => {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                      coverDragRef.current = {
+                        pointerId: event.pointerId,
+                        startX: event.clientX,
+                        startY: event.clientY,
+                        stageWidth: Math.max(rect.width, 1),
+                        stageHeight: Math.max(rect.height, 1),
+                        origin: coverAdjustment,
+                      };
+                    }}
+                    onPointerMove={(event) => {
+                      const drag = coverDragRef.current;
+                      if (!drag || drag.pointerId !== event.pointerId) return;
+
+                      updateCoverAdjustment({
+                        ...drag.origin,
+                        x: drag.origin.x + ((event.clientX - drag.startX) / drag.stageWidth) * 100,
+                        y: drag.origin.y + ((event.clientY - drag.startY) / drag.stageHeight) * 100,
+                      });
+                    }}
+                    onPointerUp={(event) => {
+                      if (coverDragRef.current?.pointerId === event.pointerId) {
+                        coverDragRef.current = null;
+                      }
+                    }}
+                    onPointerCancel={(event) => {
+                      if (coverDragRef.current?.pointerId === event.pointerId) {
+                        coverDragRef.current = null;
+                      }
+                    }}
+                  >
+                    <img className="profile-cover-crop-bg" src={coverDisplayUrl} alt="" aria-hidden="true" draggable={false} />
+                    <img
+                      className="profile-cover-crop-image"
+                      src={coverDisplayUrl}
+                      alt="Adjustable cover preview"
+                      draggable={false}
+                      style={{
+                        transform: coverTransform(coverAdjustment),
+                        transformOrigin: "50% 50%",
+                      }}
+                    />
+                    <span className="profile-cover-crop-guide" aria-hidden="true"></span>
+                  </div>
+                  <small>Drag the banner or use the controls for precise positioning.</small>
+                </div>
+
+                <div className="profile-avatar-adjust-controls">
+                  <div className="profile-avatar-adjust-copy">
+                    <div>
+                      <span className="eyebrow">BANNER POSITION</span>
+                      <strong>Adjust cover photo</strong>
+                    </div>
+                    <span>{Math.round(coverAdjustment.zoom * 100)}%</span>
+                  </div>
+
+                  <div className="profile-avatar-direction-pad" aria-label="Move cover photo">
+                    <button type="button" aria-label="Move cover up" onClick={() => nudgeCover(0, -COVER_NUDGE)}>↑</button>
+                    <button type="button" aria-label="Move cover left" onClick={() => nudgeCover(-COVER_NUDGE, 0)}>←</button>
+                    <button className="reset" type="button" aria-label="Reset cover photo position" title="Reset" onClick={() => updateCoverAdjustment(DEFAULT_COVER_ADJUSTMENT)}>
+                      <svg className="profile-reset-icon" viewBox="0 0 512 512" aria-hidden="true">
+                        <path d="M463.5 224H303.7c-21.4 0-32.1-25.9-17-41L336.9 133C293.1 89.2 221.5 87.5 176 133c-47.2 47.2-47.2 123.8 0 171s123.8 47.2 171 0c6.2-6.2 11.5-13 16-20.3 4.8-7.8 15.1-10.1 22.8-5.2l34.2 21.2c7.3 4.5 9.6 14 5.3 21.4-7.7 13.1-17.2 25.5-28.7 37-74.2 74.2-194.7 74.2-268.9 0s-74.2-194.7 0-268.9c72.6-72.6 189.5-74.2 264-4.7l56.2-56.2c15.1-15.1 41-4.4 41 17V192c0 17.7-14.3 32-32 32Z" />
+                      </svg>
+                    </button>
+                    <button type="button" aria-label="Move cover right" onClick={() => nudgeCover(COVER_NUDGE, 0)}>→</button>
+                    <button type="button" aria-label="Move cover down" onClick={() => nudgeCover(0, COVER_NUDGE)}>↓</button>
+                  </div>
+
+                  <div className="profile-avatar-zoom-row">
+                    <button type="button" aria-label="Zoom cover out" onClick={() => zoomCover(-0.1)}>−</button>
+                    <input
+                      aria-label="Cover photo zoom"
+                      type="range"
+                      min={COVER_ZOOM_MIN}
+                      max={COVER_ZOOM_MAX}
+                      step="0.05"
+                      value={coverAdjustment.zoom}
+                      onChange={(event) =>
+                        updateCoverAdjustment({
+                          ...coverAdjustment,
+                          zoom: Number(event.target.value),
+                        })
+                      }
+                    />
+                    <button type="button" aria-label="Zoom cover in" onClick={() => zoomCover(0.1)}>+</button>
+                  </div>
+
+                  <p>
+                    Your original cover file stays untouched. Reset returns to Gupto&apos;s full no-crop cover view.
+                  </p>
+                </div>
+              </section>
+            ) : null}
 
             {profileIsAdjustable && avatarAdjustOpen ? (
               <section className="profile-avatar-adjust-panel" aria-label="Adjust profile photo">
@@ -2945,7 +3429,7 @@ export default function ProfileView({
                   >
                     <img
                       className="profile-avatar-crop-image"
-                      src={profilePreview}
+                      src={profileDisplayUrl}
                       alt="Adjustable profile preview"
                       draggable={false}
                       onLoad={(event) => {

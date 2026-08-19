@@ -1,15 +1,21 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { buildVisiblePostWhere, getAcceptedFriendIds } from "@/lib/post-access";
 import GuptoNetworkApp from "@/components/GuptoNetworkApp";
-import type { Post } from "@/types/social";
+import type { Post, PostVisibility, ReactionType } from "@/types/social";
 import type { AvatarTheme } from "@/types/current-user";
 import { parseProfileWorkplaces } from "@/lib/profile-workplaces";
 
 type DbPost = {
   id: string;
   text: string;
+  visibility: PostVisibility;
   createdAt: Date;
+  editedAt: Date | null;
+  updatedAt: Date;
+  reactions: { id: string; type: string }[];
+  _count: { reactions: number; comments: number };
   author: {
     id: string;
     name: string | null;
@@ -21,6 +27,12 @@ type DbPost = {
 };
 
 const avatarThemes = new Set<AvatarTheme>(["midnight", "violet", "ocean", "mint", "sunset", "rose"]);
+
+const reactionTypes = new Set<ReactionType>(["LIKE", "LOVE", "CARE", "HAHA", "WOW", "SAD", "ANGRY", "SANDAL"]);
+
+function toReactionType(value: string | null | undefined): ReactionType | null {
+  return value && reactionTypes.has(value as ReactionType) ? (value as ReactionType) : null;
+}
 
 function toAvatarTheme(value: string): AvatarTheme {
   return avatarThemes.has(value as AvatarTheme) ? (value as AvatarTheme) : "midnight";
@@ -73,31 +85,52 @@ function mapPost(post: DbPost, currentUserId: string): Post {
     time: formatPostTime(post.createdAt),
     text: post.text,
     visual: "none",
-    liked: false,
-    likeCount: 0,
-    comments: "0",
+    liked: post.reactions.length > 0,
+    reactionType: toReactionType(post.reactions[0]?.type),
+    likeCount: post._count.reactions,
+    comments: String(post._count.comments),
+    visibility: post.visibility,
     isOwn: post.author.id === currentUserId,
+    wasEdited: Boolean(post.editedAt),
   };
 }
 
-const postSelect = {
-  id: true,
-  text: true,
-  createdAt: true,
-  author: {
-    select: {
-      id: true,
-      name: true,
-      username: true,
-      email: true,
-      image: true,
-      avatarTheme: true,
+function postSelect(currentUserId: string) {
+  return {
+    id: true,
+    text: true,
+    visibility: true,
+    createdAt: true,
+    updatedAt: true,
+    editedAt: true,
+    reactions: {
+      where: { userId: currentUserId },
+      select: { id: true, type: true },
+      take: 1,
     },
-  },
-} as const;
+    _count: { select: { reactions: true, comments: true } },
+    author: {
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        image: true,
+        avatarTheme: true,
+      },
+    },
+  } as const;
+}
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ post?: string | string[] }>;
+}) {
   const session = await auth();
+  const resolvedSearchParams = await searchParams;
+  const requestedPostParam = Array.isArray(resolvedSearchParams.post) ? resolvedSearchParams.post[0] : resolvedSearchParams.post;
+  const requestedPostId = requestedPostParam?.trim() || "";
 
   if (!session?.user?.email) {
     redirect("/login");
@@ -118,6 +151,9 @@ export default async function HomePage() {
       bio: true,
       image: true,
       coverImage: true,
+      coverPositionX: true,
+      coverPositionY: true,
+      coverZoom: true,
       avatarTheme: true,
       location: true,
       hometown: true,
@@ -141,19 +177,34 @@ export default async function HomePage() {
     redirect("/login");
   }
 
-  const [dbPosts, dbProfilePosts] = await Promise.all([
+  const friendIds = await getAcceptedFriendIds(dbUser.id);
+  const visiblePostWhere = buildVisiblePostWhere(dbUser.id, friendIds);
+  const select = postSelect(dbUser.id);
+
+  const [dbPosts, dbProfilePosts, requestedDbPost] = await Promise.all([
     prisma.post.findMany({
+      where: visiblePostWhere,
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: postSelect,
+      select,
     }),
     prisma.post.findMany({
       where: { authorId: dbUser.id },
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: postSelect,
+      select,
     }),
+    requestedPostId
+      ? prisma.post.findFirst({
+          where: { AND: [visiblePostWhere, { id: requestedPostId }] },
+          select,
+        })
+      : Promise.resolve(null),
   ]);
+
+  const feedPosts = requestedDbPost && !dbPosts.some((post) => post.id === requestedDbPost.id)
+    ? [requestedDbPost, ...dbPosts]
+    : dbPosts;
 
   const name = dbUser.name || session.user.name || "User";
   const username = dbUser.username || dbUser.email.split("@")[0];
@@ -183,13 +234,16 @@ export default async function HomePage() {
         website: dbUser.website || "",
         image: dbUser.image,
         coverImage: dbUser.coverImage,
+        coverPositionX: dbUser.coverPositionX,
+        coverPositionY: dbUser.coverPositionY,
+        coverZoom: dbUser.coverZoom,
         avatarTheme: toAvatarTheme(dbUser.avatarTheme),
         birthDate: dbUser.birthDate ? dbUser.birthDate.toISOString().slice(0, 10) : "",
         category: dbUser.category || "",
         joinedAt: dbUser.createdAt.toISOString(),
         postCount: dbUser._count.posts,
       }}
-      initialPosts={dbPosts.map((post) => mapPost(post, dbUser.id))}
+      initialPosts={feedPosts.map((post) => mapPost(post, dbUser.id))}
       initialProfilePosts={dbProfilePosts.map((post) => mapPost(post, dbUser.id))}
     />
   );

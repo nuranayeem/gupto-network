@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Post must contain between 1 and 280 characters." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -58,10 +58,12 @@ export async function POST(request: Request) {
     data: {
       authorId: user.id,
       text: parsed.data.text,
+      visibility: "PUBLIC",
     },
     select: {
       id: true,
       text: true,
+      visibility: true,
     },
   });
 
@@ -83,9 +85,11 @@ export async function POST(request: Request) {
         liked: false,
         likeCount: 0,
         comments: "0",
+        visibility: createdPost.visibility,
         isOwn: true,
+        wasEdited: false,
       },
     },
-    { status: 201 }
+    { status: 201 },
   );
 }

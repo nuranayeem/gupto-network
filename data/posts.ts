@@ -15,6 +15,7 @@ export const initialPosts: Post[] = [
     likeCount: 1200,
     displayLikeCount: "1.2K",
     comments: "84",
+    visibility: "PUBLIC",
   },
   {
     id: "2",
@@ -28,6 +29,7 @@ export const initialPosts: Post[] = [
     liked: false,
     likeCount: 428,
     comments: "26",
+    visibility: "PUBLIC",
   },
   {
     id: "3",
@@ -42,5 +44,6 @@ export const initialPosts: Post[] = [
     liked: true,
     likeCount: 917,
     comments: "59",
+    visibility: "PUBLIC",
   },
 ];

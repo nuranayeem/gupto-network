@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import type { Post } from "@/types/social";
+import type { Post, ReactionType } from "@/types/social";
 import type { CurrentUser } from "@/types/current-user";
 import MobileHeader from "./MobileHeader";
 import Sidebar from "./Sidebar";
@@ -151,20 +151,56 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
     }
   };
 
-  const toggleLike = (id: string) => {
-    const update = (current: Post[]) => current.map((post) => {
-      if (post.id !== id) return post;
-      const nextLiked = !post.liked;
-      return {
-        ...post,
-        liked: nextLiked,
-        likeCount: Math.max(post.likeCount + (nextLiked ? 1 : -1), 0),
-        displayLikeCount: undefined,
-      };
-    });
+  const toggleLike = async (id: string, type: ReactionType = "LIKE") => {
+    try {
+      const response = await fetch(`/api/posts/${id}/reaction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { reacted?: boolean; type?: ReactionType | null; count?: number; error?: string }
+        | null;
 
+      if (!response.ok || typeof payload?.reacted !== "boolean" || typeof payload.count !== "number") {
+        showToast(payload?.error || "Could not update reaction");
+        return;
+      }
+
+      const update = (current: Post[]) => current.map((post) => post.id === id ? {
+        ...post,
+        liked: payload.reacted!,
+        reactionType: payload.reacted ? payload.type ?? type : null,
+        likeCount: payload.count!,
+        displayLikeCount: undefined,
+      } : post);
+
+      setPosts(update);
+      setProfilePosts(update);
+    } catch {
+      showToast("Could not update reaction");
+    }
+  };
+
+  const handlePostUpdated = (id: string, changes: Partial<Post>) => {
+    const update = (current: Post[]) => current.map((post) => post.id === id ? { ...post, ...changes } : post);
     setPosts(update);
     setProfilePosts(update);
+  };
+
+  const handlePostDeleted = (id: string) => {
+    setPosts((current) => current.filter((post) => post.id !== id));
+    setProfilePosts((current) => current.filter((post) => post.id !== id));
+    setBookmarks((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+    setUser((current) => ({ ...current, postCount: Math.max(0, current.postCount - 1) }));
+  };
+
+  const handleCommentCountChange = (id: string, count: number) => {
+    handlePostUpdated(id, { comments: String(Math.max(0, count)) });
   };
 
   const toggleBookmark = (id: string) => {
@@ -219,6 +255,9 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
       onToggleTheme={toggleTheme}
       onToggleLike={toggleLike}
       onToggleBookmark={toggleBookmark}
+      onPostUpdated={handlePostUpdated}
+      onPostDeleted={handlePostDeleted}
+      onCommentCountChange={handleCommentCountChange}
       onProfileUpdated={handleProfileUpdated}
       onShowToast={showToast}
     />
@@ -236,6 +275,10 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
       isPublishing={isPublishing}
       onToggleLike={toggleLike}
       onToggleBookmark={toggleBookmark}
+      onPostUpdated={handlePostUpdated}
+      onPostDeleted={handlePostDeleted}
+      onCommentCountChange={handleCommentCountChange}
+      onShowToast={showToast}
       onFilterChange={changeFilter}
     />
   );

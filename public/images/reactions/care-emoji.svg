@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="408" height="408" viewBox="0 0 408 408" role="img" aria-labelledby="title desc">
+  <title id="title">Gupto Care reaction</title>
+  <desc id="desc">A warm smiling face gently hugging a heart.</desc>
+
+  <defs>
+    <linearGradient id="faceGradient" x1="112" y1="74" x2="302" y2="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD86A"/>
+      <stop offset="1" stop-color="#F7B935"/>
+    </linearGradient>
+    <linearGradient id="heartGradient" x1="166" y1="242" x2="246" y2="334" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF6683"/>
+      <stop offset="1" stop-color="#E52E52"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Warm face: intentionally simpler and rounder than the supplied reference. -->
+  <circle cx="204" cy="184" r="148" fill="url(#faceGradient)"/>
+  <circle cx="204" cy="184" r="142" fill="none" stroke="#F0A92D" stroke-width="5" opacity="0.45"/>
+
+  <!-- Soft eyebrows / closed caring eyes. -->
+  <path d="M116 151c15-14 35-15 51-2" fill="none" stroke="#70450B" stroke-width="11" stroke-linecap="round"/>
+  <path d="M292 151c-15-14-35-15-51-2" fill="none" stroke="#70450B" stroke-width="11" stroke-linecap="round"/>
+  <path d="M118 170c13 17 31 18 45 1" fill="none" stroke="#70450B" stroke-width="9" stroke-linecap="round"/>
+  <path d="M290 170c-13 17-31 18-45 1" fill="none" stroke="#70450B" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- Cheeks. -->
+  <ellipse cx="112" cy="207" rx="29" ry="18" fill="#F28C74" opacity="0.44"/>
+  <ellipse cx="296" cy="207" rx="29" ry="18" fill="#F28C74" opacity="0.44"/>
+
+  <!-- Small smile, kept above the heart so it reads clearly at reaction size. -->
+  <path d="M165 209c11 19 25 28 39 28s28-9 39-28" fill="none" stroke="#70450B" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Distinct embracing arms: two curved palms coming from below rather than side hearts. -->
+  <path d="M85 279c25-20 50-27 82-20 18 4 32 14 44 29" fill="none" stroke="#E9A72F" stroke-width="31" stroke-linecap="round"/>
+  <path d="M323 279c-25-20-50-27-82-20-18 4-32 14-44 29" fill="none" stroke="#E9A72F" stroke-width="31" stroke-linecap="round"/>
+  <path d="M97 281c19-13 38-17 58-12" fill="none" stroke="#FFD16B" stroke-width="13" stroke-linecap="round" opacity="0.82"/>
+  <path d="M311 281c-19-13-38-17-58-12" fill="none" stroke="#FFD16B" stroke-width="13" stroke-linecap="round" opacity="0.82"/>
+
+  <!-- Central heart with a slightly asymmetrical Gupto-style silhouette. -->
+  <path d="M204 342 141 284c-31-29-16-78 24-82 19-2 33 7 39 20 7-13 21-22 40-20 40 4 55 53 24 82l-64 58Z" fill="url(#heartGradient)"/>
+  <path d="M165 226c15-8 31-2 39 12" fill="none" stroke="#FF9BAE" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+
+  <!-- Tiny hand tips over the heart make the 'hug' readable without copying the original geometry. -->
+  <ellipse cx="150" cy="292" rx="22" ry="15" fill="#FFD16B" transform="rotate(19 150 292)"/>
+  <ellipse cx="258" cy="292" rx="22" ry="15" fill="#FFD16B" transform="rotate(-19 258 292)"/>
+</svg>
