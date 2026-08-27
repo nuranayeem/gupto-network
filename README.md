@@ -95,34 +95,97 @@ Never commit a populated `.env` file or production credentials.
 
 ## Project Structure
 
-```mermaid
-flowchart TB
-    ROOT["Gupto Network"]
-
-    ROOT --> APP["Application"]
-    ROOT --> CORE["Data and Domain"]
-    ROOT --> SUPPORT["Project Support"]
-
-    APP --> APPDIR["app/ — Pages, routes, and APIs"]
-    APP --> COMPONENTS["components/ — UI and features"]
-
-    CORE --> DATA["data/ — Static application data"]
-    CORE --> LIB["lib/ — Domain and utility logic"]
-    CORE --> PRISMA["prisma/ — Schema and migrations"]
-
-    SUPPORT --> PUBLIC["public/ — Static assets"]
-    SUPPORT --> SCRIPTS["scripts/ — Maintenance tools"]
-    SUPPORT --> TYPES["types/ — TypeScript definitions"]
-    SUPPORT --> DOCS["docs/ — Design documentation"]
-
-    classDef root fill:#6f4cff,color:#ffffff,stroke:#5a36e8,stroke-width:2px;
-    classDef group fill:#eee9ff,color:#312568,stroke:#b6a7ff,stroke-width:1.5px;
-    classDef folder fill:#ffffff,color:#252735,stroke:#cfd3df,stroke-width:1px;
-
-    class ROOT root;
-    class APP,CORE,SUPPORT group;
-    class APPDIR,COMPONENTS,DATA,LIB,PRISMA,PUBLIC,SCRIPTS,TYPES,DOCS folder;
-`
+```text
+gupto-network/
+│
+├── app/
+│   ├── api/
+│   │   ├── auth/
+│   │   │   ├── [...nextauth]/
+│   │   │   ├── password-reset/
+│   │   │   └── signup/
+│   │   ├── posts/
+│   │   │   ├── [postId]/
+│   │   │   └── route.ts
+│   │   ├── profile/
+│   │   │   ├── [userId]/
+│   │   │   ├── about/
+│   │   │   ├── activity/
+│   │   │   ├── media/
+│   │   │   └── route.ts
+│   │   └── stories/
+│   │       ├── [storyId]/
+│   │       ├── media/
+│   │       └── route.ts
+│   │
+│   ├── auth-error/
+│   ├── forgot-password/
+│   ├── login/
+│   ├── profile/
+│   │   └── [userId]/
+│   ├── reset-password/
+│   ├── signup/
+│   ├── verify-email/
+│   ├── verify-reset/
+│   ├── auth-actions.ts
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── components/
+│   ├── auth/
+│   ├── Composer.tsx
+│   ├── Feed.tsx
+│   ├── GuptoNetworkApp.tsx
+│   ├── MobileHeader.tsx
+│   ├── MobileNav.tsx
+│   ├── PostCard.tsx
+│   ├── ProfileFollowButton.tsx
+│   ├── ProfileView.tsx
+│   ├── RightPanel.tsx
+│   ├── Sidebar.tsx
+│   ├── Stories.tsx
+│   ├── StoryMediaEditor.tsx
+│   ├── StoryPaletteBackdrop.tsx
+│   ├── StoryStudio.tsx
+│   ├── ThemeToggle.tsx
+│   └── UserAvatar.tsx
+│
+├── data/
+│
+├── docs/
+│   └── DESIGN_SYSTEM.md
+│
+├── lib/
+│   ├── prisma.ts
+│   ├── story-media.ts
+│   └── profile and authentication utilities
+│
+├── prisma/
+│   ├── migrations/
+│   └── schema.prisma
+│
+├── public/
+│   ├── icons/
+│   └── images/
+│
+├── scripts/
+│
+├── types/
+│   ├── current-user.ts
+│   └── story.ts
+│
+├── .env.example
+├── .gitignore
+├── auth.ts
+├── next-env.d.ts
+├── next.config.mjs
+├── package.json
+├── package-lock.json
+├── prisma.config.ts
+├── tsconfig.json
+└── README.md
+```
 
 ## Data and Media
 
