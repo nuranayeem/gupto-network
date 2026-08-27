@@ -95,17 +95,34 @@ Never commit a populated `.env` file or production credentials.
 
 ## Project Structure
 
-```text
-app/          Pages, routes, and API handlers
-components/   Interface and feature components
-data/         Static application data
-docs/         Design and architecture documentation
-lib/          Database, media, profile, and domain utilities
-prisma/       Prisma schema and migration history
-public/       Version-controlled static assets
-scripts/      Development and maintenance scripts
-types/        Shared TypeScript definitions
-```
+```mermaid
+flowchart TB
+    ROOT["Gupto Network"]
+
+    ROOT --> APP["Application"]
+    ROOT --> CORE["Data and Domain"]
+    ROOT --> SUPPORT["Project Support"]
+
+    APP --> APPDIR["app/ — Pages, routes, and APIs"]
+    APP --> COMPONENTS["components/ — UI and features"]
+
+    CORE --> DATA["data/ — Static application data"]
+    CORE --> LIB["lib/ — Domain and utility logic"]
+    CORE --> PRISMA["prisma/ — Schema and migrations"]
+
+    SUPPORT --> PUBLIC["public/ — Static assets"]
+    SUPPORT --> SCRIPTS["scripts/ — Maintenance tools"]
+    SUPPORT --> TYPES["types/ — TypeScript definitions"]
+    SUPPORT --> DOCS["docs/ — Design documentation"]
+
+    classDef root fill:#6f4cff,color:#ffffff,stroke:#5a36e8,stroke-width:2px;
+    classDef group fill:#eee9ff,color:#312568,stroke:#b6a7ff,stroke-width:1.5px;
+    classDef folder fill:#ffffff,color:#252735,stroke:#cfd3df,stroke-width:1px;
+
+    class ROOT root;
+    class APP,CORE,SUPPORT group;
+    class APPDIR,COMPONENTS,DATA,LIB,PRISMA,PUBLIC,SCRIPTS,TYPES,DOCS folder;
+`
 
 ## Data and Media
 
