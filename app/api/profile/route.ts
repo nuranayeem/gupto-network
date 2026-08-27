@@ -238,7 +238,7 @@ export async function PATCH(request: Request) {
       birthDate: true,
       category: true,
       createdAt: true,
-      _count: { select: { posts: true } },
+      _count: { select: { posts: true, followers: true, following: true } },
     },
   });
 
@@ -276,6 +276,8 @@ export async function PATCH(request: Request) {
       category: updated.category || "",
       joinedAt: updated.createdAt.toISOString(),
       postCount: updated._count.posts,
+      followerCount: updated._count.followers,
+      followingCount: updated._count.following,
     },
   });
 }

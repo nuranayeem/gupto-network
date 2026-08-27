@@ -48,6 +48,10 @@ model User {
   replyReactions        ReplyReaction[]
   sentFriendships       Friendship[]           @relation("FriendshipRequester")
   receivedFriendships   Friendship[]           @relation("FriendshipAddressee")
+  following             Follow[]               @relation("FollowFollower")
+  followers             Follow[]               @relation("FollowFollowing")
+  stories               Story[]
+  storyViews            StoryView[]
 }
 
 enum PostVisibility {
@@ -71,6 +75,80 @@ enum FriendshipStatus {
   PENDING
   ACCEPTED
   BLOCKED
+}
+
+enum StoryMediaType {
+  PHOTO
+  VIDEO
+  MUSIC
+  PHOTO_MUSIC
+}
+
+enum StoryAudience {
+  PUBLIC
+  FOLLOWERS
+  PRIVATE
+}
+
+model Story {
+  id              String          @id @default(cuid())
+  authorId        String
+  mediaType       StoryMediaType
+  mediaUrl        String?
+  audioUrl        String?
+  audioStartSeconds Float    @default(0)
+  audioDurationSeconds Float @default(20)
+  backgroundColorA String     @default("#4b3d36") @db.VarChar(16)
+  backgroundColorB String     @default("#766052") @db.VarChar(16)
+  backgroundColorC String     @default("#b3927c") @db.VarChar(16)
+  mediaScale      Float           @default(1)
+  mediaRotation   Int             @default(0)
+  mediaFlipX      Boolean         @default(false)
+  mediaFlipY      Boolean         @default(false)
+  mediaOffsetX    Float           @default(0)
+  mediaOffsetY    Float           @default(0)
+  mediaFit        String          @default("COVER") @db.VarChar(12)
+  mediaFrame      String          @default("PORTRAIT") @db.VarChar(16)
+  caption         String?         @db.VarChar(180)
+  captionFont     String          @default("MODERN") @db.VarChar(16)
+  captionSize     String          @default("MEDIUM") @db.VarChar(12)
+  captionFontSize Int             @default(17)
+  captionAlign    String          @default("CENTER") @db.VarChar(12)
+  captionBold     Boolean         @default(true)
+  captionItalic   Boolean         @default(false)
+  captionColor    String          @default("#ffffff") @db.VarChar(16)
+  captionBg       String          @default("NONE") @db.VarChar(16)
+  captionBgColor  String          @default("#171922") @db.VarChar(16)
+  captionPosition String          @default("BOTTOM") @db.VarChar(12)
+  captionOffsetX  Float           @default(50)
+  captionOffsetY  Float           @default(82)
+  captionRotation Int             @default(0)
+  musicTitle      String?         @db.VarChar(80)
+  accent          String          @default("violet") @db.VarChar(24)
+  audience        StoryAudience   @default(PUBLIC)
+  durationSeconds Int             @default(7)
+  allowReplies    Boolean         @default(true)
+  expiresAt       DateTime
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  author          User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  views           StoryView[]
+
+  @@index([authorId, createdAt])
+  @@index([expiresAt])
+  @@index([audience, expiresAt])
+}
+
+model StoryView {
+  id        String   @id @default(cuid())
+  storyId   String
+  viewerId  String
+  viewedAt  DateTime @default(now())
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer    User     @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, viewerId])
+  @@index([viewerId, viewedAt])
 }
 
 model Post {
@@ -186,6 +264,19 @@ model Friendship {
   @@unique([requesterId, addresseeId])
   @@index([addresseeId, status])
   @@index([requesterId, status])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("FollowFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("FollowFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId, createdAt])
+  @@index([followingId, createdAt])
 }
 
 model PendingSignup {

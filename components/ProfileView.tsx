@@ -26,6 +26,8 @@ type ProfileViewProps = {
   onCommentCountChange: (id: string, count: number) => void;
   onProfileUpdated: (user: CurrentUser) => void;
   onShowToast: (message: string) => void;
+  hasOwnActiveStory: boolean;
+  onOpenOwnStory: () => void;
 };
 
 type DraftProfile = {
@@ -86,6 +88,50 @@ const ABOUT_FIELD_LABELS: Record<AboutField, string> = {
   email: "Email",
   phoneNumber: "Phone number",
 };
+
+const ABOUT_GROUPS: Array<{
+  id: "basics" | "places" | "work" | "education" | "relationships" | "links";
+  title: string;
+  description: string;
+  fields: AboutField[];
+}> = [
+  {
+    id: "basics",
+    title: "Basics",
+    description: "Identity, interests, and personal details.",
+    fields: ["bio", "gender", "category", "interests", "birthDate", "email", "phoneNumber"],
+  },
+  {
+    id: "places",
+    title: "Places",
+    description: "Where you live and where you call home.",
+    fields: ["location", "hometown"],
+  },
+  {
+    id: "work",
+    title: "Work",
+    description: "Your workplace and professional identity.",
+    fields: ["workplace"],
+  },
+  {
+    id: "education",
+    title: "Education",
+    description: "Schools and institutions you have attended.",
+    fields: ["school", "college", "university"],
+  },
+  {
+    id: "relationships",
+    title: "Relationships",
+    description: "Relationship information you choose to share.",
+    fields: ["relationshipStatus"],
+  },
+  {
+    id: "links",
+    title: "Links",
+    description: "Your social profiles and website.",
+    fields: ["socialLinks", "website"],
+  },
+];
 
 const MAX_MEDIA_BYTES = 100 * 1024 * 1024;
 const browserPreviewTypes = new Set([
@@ -166,6 +212,49 @@ function FontAwesomeDeleteIcon() {
     <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
       {/* Same Font Awesome Trash Can icon used by the About row actions. */}
       <path d="M135.2 17.69C140.6 6.848 151.7 0 163.8 0H284.2C296.3 0 307.4 6.848 312.8 17.69L320 32H416C433.7 32 448 46.33 448 64C448 81.67 433.7 96 416 96H32C14.33 96 0 81.67 0 64C0 46.33 14.33 32 32 32H128L135.2 17.69zM31.1 128H416V448C416 483.3 387.3 512 352 512H95.1C60.65 512 31.1 483.3 31.1 448V128zM111.1 208V432C111.1 440.8 119.2 448 127.1 448C136.8 448 143.1 440.8 143.1 432V208C143.1 199.2 136.8 192 127.1 192C119.2 192 111.1 199.2 111.1 208zM207.1 208V432C207.1 440.8 215.2 448 223.1 448C232.8 448 240 440.8 240 432V208C240 199.2 232.8 192 223.1 192C215.2 192 207.1 199.2 207.1 208zM304 208V432C304 440.8 311.2 448 320 448C328.8 448 336 440.8 336 432V208C336 199.2 328.8 192 320 192C311.2 192 304 199.2 304 208z" />
+    </svg>
+  );
+}
+
+function FontAwesomeUserIcon() {
+  return (
+    <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+      <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z" />
+    </svg>
+  );
+}
+
+function FontAwesomeEllipsisIcon() {
+  return (
+    <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+      <path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1-112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z" />
+    </svg>
+  );
+}
+
+function FontAwesomeDownloadIcon() {
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+      {/* Font Awesome Free Download icon. */}
+      <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.3c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z" />
+    </svg>
+  );
+}
+
+function FontAwesomeShareIcon() {
+  return (
+    <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+      {/* Font Awesome Free Share Nodes icon. */}
+      <path d="M352 224c53 0 96-43 96-96s-43-96-96-96-96 43-96 96c0 4 .2 8 .7 12L135.4 197.6C119.3 184.1 98.6 176 76 176c-53 0-96 43-96 96s43 96 96 96c24.7 0 47.2-9.3 64.2-24.5l115.4 65.9c-.4 3.5-.6 7-.6 10.6 0 53 43 96 96 96s96-43 96-96-43-96-96-96c-24.7 0-47.2 9.3-64.2 24.5l-115.4-65.9c.4-3.5 .6-7 .6-10.6s-.2-7.1-.6-10.6l115.4-65.9C304.8 214.7 327.3 224 352 224z" />
+    </svg>
+  );
+}
+
+function FontAwesomeViewPostIcon() {
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+      {/* Font Awesome Free Arrow Up Right From Square icon. */}
+      <path d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32S209.7 32 192 32H80z" />
     </svg>
   );
 }
@@ -409,6 +498,74 @@ function ProfileCategoryIcon({ category }: { category: string }) {
 }
 
 
+function AboutGroupIcon({ group }: { group: "basics" | "places" | "work" | "education" | "relationships" | "links" }) {
+  const commonProps = {
+    viewBox: "0 0 24 24",
+    "aria-hidden": true,
+    focusable: false,
+    "data-about-filled-group-icon": group,
+    style: {
+      fill: "currentColor",
+      stroke: "none",
+    },
+  };
+
+  if (group === "basics") {
+    return (
+      <svg {...commonProps}>
+        <circle cx="12" cy="7.2" r="3.6" />
+        <path d="M5.2 20c.35-4.35 2.9-6.55 6.8-6.55S18.45 15.65 18.8 20H5.2Z" />
+      </svg>
+    );
+  }
+
+  if (group === "places") {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 2.25a9.75 9.75 0 1 0 0 19.5 9.75 9.75 0 0 0 0-19.5Zm3.55 5.2-2.08 6.02-6.02 2.08 2.08-6.02 6.02-2.08Z" />
+        <circle cx="11.5" cy="11.5" r="1.55" />
+      </svg>
+    );
+  }
+
+  if (group === "work") {
+    return (
+      <svg {...commonProps}>
+        <path d="M5 4.2h14a2 2 0 0 1 2 2V20H3V6.2a2 2 0 0 1 2-2Zm2.2 3.3v2.2h2.2V7.5H7.2Zm7.4 0v2.2h2.2V7.5h-2.2Zm-7.4 5v2.2h2.2v-2.2H7.2Zm7.4 0v2.2h2.2v-2.2h-2.2ZM10.9 16v4h2.2v-4h-2.2Z" />
+      </svg>
+    );
+  }
+
+  if (group === "education") {
+    return (
+      <svg {...commonProps}>
+        <path d="M3.25 4.5c3.6 0 6.12.72 8.75 2.45V20c-2.63-1.72-5.15-2.45-8.75-2.45V4.5Zm17.5 0v13.05c-3.6 0-6.12.73-8.75 2.45V6.95c2.63-1.73 5.15-2.45 8.75-2.45Z" />
+      </svg>
+    );
+  }
+
+  if (group === "relationships") {
+    return (
+      <svg {...commonProps}>
+        <circle cx="8.2" cy="8" r="3" />
+        <circle cx="16.5" cy="9" r="2.5" />
+        <path d="M2.8 19.4c.35-3.85 2.35-5.8 5.4-5.8 3.08 0 5.05 1.95 5.4 5.8H2.8Z" />
+        <path d="M13.3 19.4c.12-2.55 1.35-4.25 3.55-4.75 2.55-.58 4.1 1.12 4.35 4.75h-7.9Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...commonProps}>
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="6" r="3" />
+      <circle cx="18" cy="18" r="3" />
+      <path d="M8.7 10.65 15.25 7.4v2.2L9.1 12.65l6.15 3.08v2.18L8.7 14.65a3 3 0 0 0 0-4Z" />
+    </svg>
+  );
+}
+
+
 function AboutFieldIcon({ field }: { field: AboutField }) {
   const commonProps = {
     viewBox: "0 0 24 24",
@@ -600,9 +757,9 @@ function AboutRowActions({
         title={`Edit ${label}`}
         onClick={() => onEdit(field)}
       >
-        {/* Font Awesome Free 6 — Pen To Square (Classic Solid) */}
-        <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
-          <path d="M490.3 40.4C512.2 62.27 512.2 97.73 490.3 119.6L460.3 149.7L362.3 51.72L392.4 21.66C414.3-.2135 449.7-.2135 471.6 21.66L490.3 40.4zM172.4 241.7L339.7 74.34L437.7 172.3L270.3 339.6C264.2 345.8 256.7 350.4 248.4 353.2L159.6 382.8C150.1 385.6 141.5 383.4 135 376.1C128.6 370.5 126.4 361 129.2 352.4L158.8 263.6C161.6 255.3 166.2 247.8 172.4 241.7V241.7zM192 63.1C209.7 63.1 224 78.33 224 95.1C224 113.7 209.7 127.1 192 127.1H96C78.33 127.1 64 142.3 64 159.1V416C64 433.7 78.33 448 96 448H352C369.7 448 384 433.7 384 416V319.1C384 302.3 398.3 287.1 416 287.1C433.7 287.1 448 302.3 448 319.1V416C448 469 405 512 352 512H96C42.98 512 0 469 0 416V159.1C0 106.1 42.98 63.1 96 63.1H192z" />
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4L16.5 3.5Z" />
         </svg>
       </button>
       <button
@@ -613,9 +770,11 @@ function AboutRowActions({
         disabled={!canDelete}
         onClick={() => onDelete(field)}
       >
-        {/* Font Awesome Free 6 — Trash Can (Classic Solid) */}
-        <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
-          <path d="M135.2 17.69C140.6 6.848 151.7 0 163.8 0H284.2C296.3 0 307.4 6.848 312.8 17.69L320 32H416C433.7 32 448 46.33 448 64C448 81.67 433.7 96 416 96H32C14.33 96 0 81.67 0 64C0 46.33 14.33 32 32 32H128L135.2 17.69zM31.1 128H416V448C416 483.3 387.3 512 352 512H95.1C60.65 512 31.1 483.3 31.1 448V128zM111.1 208V432C111.1 440.8 119.2 448 127.1 448C136.8 448 143.1 440.8 143.1 432V208C143.1 199.2 136.8 192 127.1 192C119.2 192 111.1 199.2 111.1 208zM207.1 208V432C207.1 440.8 215.2 448 223.1 448C232.8 448 240 440.8 240 432V208C240 199.2 232.8 192 223.1 192C215.2 192 207.1 199.2 207.1 208zM304 208V432C304 440.8 311.2 448 320 448C328.8 448 336 440.8 336 432V208C336 199.2 328.8 192 320 192C311.2 192 304 199.2 304 208z" />
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M3 6h18" />
+          <path d="M8 6V4h8v2" />
+          <path d="m19 6-1 14H6L5 6" />
+          <path d="M10 11v5M14 11v5" />
         </svg>
       </button>
     </div>
@@ -1919,7 +2078,7 @@ function AppleBirthDatePicker({
                     return (
                       <button
                         key={year}
-                        ref={selected ? selectedYearRef : undefined}
+                        ref={year === yearLabel ? selectedYearRef : undefined}
                         type="button"
                         className={selected ? "selected" : ""}
                         onClick={() => {
@@ -1989,8 +2148,30 @@ function AppleBirthDatePicker({
   );
 }
 
-type ProfileTab = "posts" | "about" | "react" | "comment" | "reply";
-type ProfileActivityTab = Exclude<ProfileTab, "posts" | "about">;
+type ProfileTab = "overview" | "posts" | "about" | "media" | "activity";
+type ProfileActivityTab = "react" | "comment" | "reply";
+type ProfileActivityFilter = "all" | ProfileActivityTab;
+
+type ActivityDateRange = {
+  label: string;
+  from: string;
+  to: string;
+};
+
+type ActivityDeletePayload = {
+  mode: "selected" | "type" | "range" | "all";
+  items?: Array<{ kind: ProfileActivityTab; id: string }>;
+  types?: ProfileActivityTab[];
+  from?: string;
+  to?: string;
+};
+
+type ActivityDeleteConfirmation = {
+  title: string;
+  copy: string;
+  successMessage: string;
+  payload: ActivityDeletePayload;
+};
 
 type ProfileActivityItem = {
   id: string;
@@ -2001,44 +2182,1642 @@ type ProfileActivityItem = {
   postContext?: string;
   createdAt: string;
   postId: string;
+  commentId?: string;
   postAuthor: string;
+  postAuthorProfile?: {
+    id: string;
+    initials: string;
+    name: string;
+    handle: string;
+    avatarUrl: string | null;
+    avatarTheme: AvatarTheme;
+  };
 };
 
 function activityTime(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 }
 
-function ProfileActivityPanel({ tab, items, loading, error }: {
-  tab: ProfileActivityTab;
+function activityClock(value: string) {
+  return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date(value));
+}
+
+function activityDayKey(value: string) {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function activityDayLabel(value: string) {
+  const date = new Date(value);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const difference = Math.round((today.getTime() - target.getTime()) / 86_400_000);
+
+  if (difference === 0) return "Today";
+  if (difference === 1) return "Yesterday";
+  return activityTime(value);
+}
+
+function activityPostHref(postId: string) {
+  const encoded = encodeURIComponent(postId);
+  return `/?post=${encoded}#post-${encoded}`;
+}
+
+function activityItemKey(item: Pick<ProfileActivityItem, "kind" | "id">) {
+  return `${item.kind}:${item.id}`;
+}
+
+function buildActivityCalendarRange(mode: "day" | "month" | "year", value: string): ActivityDateRange | null {
+  if (!value) return null;
+
+  if (mode === "day") {
+    const parts = value.split("-").map(Number);
+    if (parts.length !== 3) return null;
+    const [year, month, day] = parts;
+    if (![year, month, day].every(Number.isInteger)) return null;
+    const start = new Date(year, month - 1, day);
+    if (start.getFullYear() !== year || start.getMonth() !== month - 1 || start.getDate() !== day) return null;
+    const end = new Date(year, month - 1, day + 1);
+    return {
+      label: new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric" }).format(start),
+      from: start.toISOString(),
+      to: end.toISOString(),
+    };
+  }
+
+  if (mode === "month") {
+    const parts = value.split("-").map(Number);
+    if (parts.length !== 2) return null;
+    const [year, month] = parts;
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !year || month < 1 || month > 12) return null;
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1);
+    return {
+      label: new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(start),
+      from: start.toISOString(),
+      to: end.toISOString(),
+    };
+  }
+
+  const year = Number(value);
+  if (!Number.isInteger(year) || year < 1970 || year > 9999) return null;
+  const start = new Date(year, 0, 1);
+  const end = new Date(year + 1, 0, 1);
+  return { label: String(year), from: start.toISOString(), to: end.toISOString() };
+}
+
+function buildActivityRelativeRange(kind: "hour" | "week" | "month" | "year"): ActivityDateRange {
+  const end = new Date();
+  const start = new Date(end);
+  let label = "";
+
+  if (kind === "hour") {
+    start.setHours(start.getHours() - 1);
+    label = "Last hour";
+  } else if (kind === "week") {
+    start.setDate(start.getDate() - 7);
+    label = "Last 7 days";
+  } else if (kind === "month") {
+    start.setDate(start.getDate() - 30);
+    label = "Last 30 days";
+  } else {
+    start.setFullYear(start.getFullYear() - 1);
+    label = "Last 1 year";
+  }
+
+  return { label, from: start.toISOString(), to: end.toISOString() };
+}
+
+async function fetchProfileActivityBundle(range: ActivityDateRange | null, signal?: AbortSignal) {
+  const types: ProfileActivityTab[] = ["react", "comment", "reply"];
+  const results = await Promise.all(types.map(async (type) => {
+    const search = new URLSearchParams({ type });
+    if (range) {
+      search.set("from", range.from);
+      search.set("to", range.to);
+    }
+    const response = await fetch(`/api/profile/activity?${search.toString()}`, { cache: "no-store", signal });
+    const payload = (await response.json().catch(() => null)) as { items?: ProfileActivityItem[]; error?: string } | null;
+    if (!response.ok || !payload?.items) throw new Error(payload?.error || "Could not load profile activity.");
+    return [type, payload.items] as const;
+  }));
+
+  return results.reduce<Record<ProfileActivityTab, ProfileActivityItem[]>>((accumulator, [type, items]) => {
+    accumulator[type] = items;
+    return accumulator;
+  }, { react: [], comment: [], reply: [] });
+}
+
+type ActivityReactionType = "LIKE" | "LOVE" | "CARE" | "HAHA" | "WOW" | "SAD" | "ANGRY" | "SANDAL";
+
+const ACTIVITY_REACTIONS: Record<ActivityReactionType, { label: string; color: string; accent?: string }> = {
+  LIKE: { label: "Like", color: "#2F80ED" },
+  LOVE: { label: "Love", color: "#FF4F78" },
+  CARE: { label: "Care", color: "#FECB4C", accent: "#DC2E43" },
+  HAHA: { label: "Haha", color: "#F5B700" },
+  WOW: { label: "Wow", color: "#F6B928", accent: "#6F4A00" },
+  SAD: { label: "Sad", color: "#5B8DEF", accent: "#74B8FF" },
+  ANGRY: { label: "Angry", color: "#F05A47" },
+  SANDAL: { label: "Sandal", color: "#19A6EA", accent: "#036DB1" },
+};
+
+function isActivityReactionType(value: string): value is ActivityReactionType {
+  return Object.prototype.hasOwnProperty.call(ACTIVITY_REACTIONS, value);
+}
+
+function activityReactionLabel(value: string) {
+  return isActivityReactionType(value) ? ACTIVITY_REACTIONS[value].label : "Reaction";
+}
+
+function activityReactionClass(value: string) {
+  return isActivityReactionType(value) ? `reaction-${value.toLowerCase()}` : "reaction-like";
+}
+
+function activityLabel(item: ProfileActivityItem) {
+  if (item.kind === "react") return "Reacted on a post";
+  if (item.kind === "comment") return "Commented on a post";
+  return "Replied in a conversation";
+}
+
+function ActivityReactionIcon({ type }: { type: ActivityReactionType }) {
+  if (type === "LIKE") {
+    return (
+      <svg className="reaction-icon reaction-icon-like is-filled" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M10.5 14.5v12H6.8A2.8 2.8 0 0 1 4 23.7v-6.4a2.8 2.8 0 0 1 2.8-2.8h3.7Z" />
+        <path d="M12 26.5h10.2c1.8 0 3.4-1.2 3.8-3l1.8-7.4a3 3 0 0 0-2.9-3.7h-6.1l.7-3.3c.4-2.1-.9-4.2-3-4.8l-.8-.2-5.2 10.4v9.2c0 1.5.6 2.8 1.5 2.8Z" />
+      </svg>
+    );
+  }
+  if (type === "LOVE") {
+    return (
+      <svg className="reaction-icon reaction-icon-love" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 27.2 5.8 17.4A7.2 7.2 0 0 1 16 7.2a7.2 7.2 0 0 1 10.2 10.2L16 27.2Z" />
+      </svg>
+    );
+  }
+  if (type === "CARE") {
+    return <img className="reaction-icon reaction-icon-image reaction-icon-care-art" src="/images/reactions/care-emoji.svg" alt="" aria-hidden="true" draggable={false} />;
+  }
+  if (type === "HAHA") {
+    return (
+      <svg className="reaction-icon reaction-icon-haha" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="12" className="reaction-face" />
+        <path d="M9.5 12.5c1.3-1.3 2.7-1.3 4 0M18.5 12.5c1.3-1.3 2.7-1.3 4 0" className="reaction-stroke" />
+        <path d="M9.5 17.2h13c-.6 5-3.4 7.4-6.5 7.4s-5.9-2.4-6.5-7.4Z" className="reaction-mouth" />
+        <path d="M13 22.2c2-1.2 4-1.2 6 0" className="reaction-tongue" />
+      </svg>
+    );
+  }
+  if (type === "WOW") {
+    return (
+      <svg className="reaction-icon reaction-icon-wow" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="12" className="reaction-face" />
+        <path d="M9.3 10.3c1.4-1.1 2.9-1.5 4.3-1.2M22.7 10.3c-1.4-1.1-2.9-1.5-4.3-1.2" className="reaction-stroke reaction-wow-brow" />
+        <ellipse cx="11.8" cy="14.2" rx="1.7" ry="2.35" className="reaction-wow-detail" />
+        <ellipse cx="20.2" cy="14.2" rx="1.7" ry="2.35" className="reaction-wow-detail" />
+        <ellipse cx="16" cy="21" rx="3.25" ry="4.15" className="reaction-wow-mouth" />
+        <ellipse cx="16" cy="22.4" rx="1.55" ry="1.1" className="reaction-wow-tongue" />
+      </svg>
+    );
+  }
+  if (type === "SAD") {
+    return (
+      <svg className="reaction-icon reaction-icon-sad" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="12" className="reaction-face" />
+        <circle cx="12" cy="13" r="1.25" className="reaction-cut" />
+        <circle cx="20" cy="13" r="1.25" className="reaction-cut" />
+        <path d="M11.5 21c1.4-2.2 3-3.2 4.5-3.2s3.1 1 4.5 3.2" className="reaction-stroke" />
+        <path d="M22.3 14.6c2 2.8 2.3 4.4.8 5.7-1.5 1.3-3.7.4-3.7-1.6 0-1.2 1-2.5 2.9-4.1Z" className="reaction-accent" />
+      </svg>
+    );
+  }
+  if (type === "SANDAL") {
+    return <img className="reaction-icon reaction-icon-image reaction-icon-sandal-art" src="/images/reactions/sandal-emoji.svg" alt="" aria-hidden="true" draggable={false} />;
+  }
+  return (
+    <svg className="reaction-icon reaction-icon-angry" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="12" className="reaction-face" />
+      <path d="m8.8 11.2 5 2M23.2 11.2l-5 2" className="reaction-stroke reaction-brow" />
+      <circle cx="12" cy="14.8" r="1.2" className="reaction-cut" />
+      <circle cx="20" cy="14.8" r="1.2" className="reaction-cut" />
+      <path d="M11.2 22c1.4-1.7 3-2.5 4.8-2.5s3.4.8 4.8 2.5" className="reaction-stroke" />
+    </svg>
+  );
+}
+
+function FontAwesomeActivityIcon({ type }: { type: "all" | "react" | "comment" | "reply" }) {
+  // Font Awesome Classic Regular paths: true outline icons, not stroked solid glyphs.
+  if (type === "react") {
+    return (
+      <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+        <path d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm177.6 62.1C192.8 334.5 218.8 352 256 352s63.2-17.5 78.4-33.9c9-9.7 24.2-10.4 33.9-1.4s10.4 24.2 1.4 33.9c-22 23.8-60 49.4-113.6 49.4s-91.7-25.5-113.6-49.4c-9-9.7-8.4-24.9 1.4-33.9s24.9-8.4 33.9 1.4zM144.4 208a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm192-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+      </svg>
+    );
+  }
+  if (type === "comment") {
+    return (
+      <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+        <path d="M168.2 384.9c-15-5.4-31.7-3.1-44.6 6.4c-8.2 6-22.3 14.8-39.4 22.7c5.6-14.7 9.9-31.3 11.3-49.4c1-12.9-3.3-25.7-11.8-35.5C60.4 302.8 48 272 48 240c0-79.5 83.3-160 208-160s208 80.5 208 160s-83.3 160-208 160c-31.6 0-61.3-5.5-87.8-15.1zM26.3 423.8c-1.6 2.7-3.3 5.4-5.1 8.1l-.3 .5c-1.6 2.3-3.2 4.6-4.8 6.9c-3.5 4.7-7.3 9.3-11.3 13.5c-4.6 4.6-5.9 11.4-3.4 17.4c2.5 6 8.3 9.9 14.8 9.9c5.1 0 10.2-.3 15.3-.8l.7-.1c4.4-.5 8.8-1.1 13.2-1.9c.8-.1 1.6-.3 2.4-.5c17.8-3.5 34.9-9.5 50.1-16.1c22.9-10 42.4-21.9 54.3-30.6c31.8 11.5 67 17.9 104.1 17.9c141.4 0 256-93.1 256-208S397.4 32 256 32S0 125.1 0 240c0 45.1 17.7 86.8 47.7 120.9c-1.9 24.5-11.4 46.3-21.4 62.9zM144 272a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm144-32a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm80 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z" />
+      </svg>
+    );
+  }
+  if (type === "reply") {
+    return (
+      <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+        <path d="M0 224c0 17.7 14.3 32 32 32s32-14.3 32-32c0-53 43-96 96-96l160 0 0 32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S320 19.1 320 32l0 32L160 64C71.6 64 0 135.6 0 224zm512 64c0-17.7-14.3-32-32-32s-32 14.3-32 32c0 53-43 96-96 96l-160 0 0-32c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6l0-32 160 0c88.4 0 160-71.6 160-160z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+      <path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2l-41.1 41.1C372.5 58.8 317.9 32 256 32C132.3 32 32 132.3 32 256S132.3 480 256 480c89.8 0 167.3-52.8 203.1-129.1 5.6-12 .4-26.3-11.6-31.9s-26.3-.4-31.9 11.6C387.5 390.4 326.7 432 256 432c-97.2 0-176-78.8-176-176S158.8 80 256 80c48.2 0 91.9 19.4 123.7 50.8L335 175.5c-6.9 6.9-8.9 17.2-5.2 26.2S342.3 216 352 216H463.5zM256 128c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L280 246.1V152c0-13.3-10.7-24-24-24z" />
+    </svg>
+  );
+}
+
+function ActivityKindIcon({ kind }: { kind: ProfileActivityTab }) {
+  return <FontAwesomeActivityIcon type={kind === "react" ? "react" : kind} />;
+}
+
+function ActivityFilterIcon({ filter }: { filter: ProfileActivityFilter }) {
+  return <FontAwesomeActivityIcon type={filter} />;
+}
+
+
+function ActivityReactionDetail({
+  item,
+  currentUsername,
+  onUpdated,
+  onDeleted,
+  onShowToast,
+}: {
+  item: ProfileActivityItem;
+  currentUsername: string;
+  onUpdated: (reactionId: string, type: ActivityReactionType, postId: string, count: number) => void;
+  onDeleted: (reactionId: string, postId: string, count: number) => void;
+  onShowToast: (message: string) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [changingReaction, setChangingReaction] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [error, setError] = useState("");
+  const actionShellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && actionShellRef.current?.contains(target)) return;
+      setMenuOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
+  const profileHref = item.postAuthorProfile
+    ? item.postAuthorProfile.handle.toLowerCase() === `@${currentUsername.toLowerCase()}`
+      ? "/#profile"
+      : `/profile/${encodeURIComponent(item.postAuthorProfile.id)}`
+    : "/#profile";
+  const postHref = activityPostHref(item.postId);
+
+  const currentReaction = isActivityReactionType(item.label) ? item.label : "LIKE";
+
+  const changeReaction = async (type: ActivityReactionType) => {
+    if (saving) return;
+    if (type === currentReaction) {
+      setChangingReaction(false);
+      setError("");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/posts/${encodeURIComponent(item.postId)}/reaction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        reacted?: boolean;
+        type?: ActivityReactionType | null;
+        count?: number;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !payload || typeof payload.count !== "number") {
+        setError(payload?.error || "Could not change this reaction.");
+        return;
+      }
+
+      if (!payload.reacted || !payload.type || !isActivityReactionType(payload.type)) {
+        onDeleted(item.id, item.postId, payload.count);
+        setChangingReaction(false);
+        onShowToast("Reaction removed");
+        return;
+      }
+
+      onUpdated(item.id, payload.type, item.postId, payload.count);
+      setChangingReaction(false);
+      onShowToast(`Reaction changed to ${activityReactionLabel(payload.type)}`);
+    } catch {
+      setError("Could not change this reaction.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteReaction = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/posts/${encodeURIComponent(item.postId)}/reaction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: currentReaction }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        reacted?: boolean;
+        type?: ActivityReactionType | null;
+        count?: number;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !payload || typeof payload.count !== "number") {
+        setError(payload?.error || "Could not delete this reaction.");
+        return;
+      }
+
+      if (payload.reacted) {
+        setError("Reaction could not be removed. Please try again.");
+        return;
+      }
+
+      setDeleteOpen(false);
+      onDeleted(item.id, item.postId, payload.count);
+      onShowToast("Reaction deleted");
+    } catch {
+      setError("Could not delete this reaction.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!item.postAuthorProfile) {
+    return isActivityReactionType(item.label) ? (
+      <div className={`profile-activity-reaction-value ${activityReactionClass(item.label)}`}>
+        <ActivityReactionIcon type={item.label} />
+        <span>{activityReactionLabel(item.label)}</span>
+      </div>
+    ) : null;
+  }
+
+  return (
+    <>
+      <div className={`profile-activity-comment-detail profile-activity-reaction-detail${changingReaction ? " editing" : ""}`}>
+        <div className="profile-activity-post-author">
+          <UserAvatar
+            initials={item.postAuthorProfile.initials}
+            image={item.postAuthorProfile.avatarUrl}
+            theme={item.postAuthorProfile.avatarTheme}
+            className="profile-avatar profile-activity-author-avatar"
+            alt={`${item.postAuthorProfile.name} profile photo`}
+          />
+          <div className="profile-activity-post-author-meta">
+            <strong>{item.postAuthorProfile.name}</strong>
+            <span>{item.postAuthorProfile.handle}</span>
+            {!changingReaction && isActivityReactionType(item.label) ? (
+              <div className={`profile-activity-reaction-value ${activityReactionClass(item.label)}`} aria-label={`${activityReactionLabel(item.label)} reaction`}>
+                <ActivityReactionIcon type={item.label} />
+                <span>{activityReactionLabel(item.label)}</span>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="profile-activity-comment-action-shell" ref={actionShellRef}>
+            <button
+              className="profile-activity-comment-action-trigger"
+              type="button"
+              aria-label="Reaction actions"
+              title="Reaction actions"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((current) => !current)}
+            >
+              <FontAwesomeEllipsisIcon />
+            </button>
+
+            {menuOpen ? (
+              <div className="profile-media-action-menu profile-activity-comment-action-menu" role="menu" aria-label="Reaction actions">
+                <a href={profileHref} role="menuitem" onClick={() => setMenuOpen(false)}>
+                  <span><FontAwesomeUserIcon /></span>View Profile
+                </a>
+                <a href={postHref} role="menuitem" onClick={() => setMenuOpen(false)}>
+                  <span><FontAwesomeViewPostIcon /></span>View Post
+                </a>
+                <button
+                  className="danger"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setChangingReaction(false);
+                    setError("");
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <span><FontAwesomeDeleteIcon /></span>Delete Reaction
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {changingReaction ? (
+          <div className="profile-activity-reaction-editor-wrap">
+            <div className="profile-activity-reaction-editor-heading">
+              <strong>Change reaction</strong>
+              <span>Choose a new reaction for this post.</span>
+            </div>
+
+            <div className="profile-activity-reaction-picker" role="radiogroup" aria-label="Choose a reaction">
+              {(Object.keys(ACTIVITY_REACTIONS) as ActivityReactionType[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  role="radio"
+                  aria-checked={currentReaction === type}
+                  className={`${activityReactionClass(type)}${currentReaction === type ? " active" : ""}`}
+                  title={activityReactionLabel(type)}
+                  aria-label={activityReactionLabel(type)}
+                  disabled={saving}
+                  onClick={() => void changeReaction(type)}
+                >
+                  <ActivityReactionIcon type={type} />
+                  <span>{activityReactionLabel(type)}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="profile-activity-reaction-editor-actions">
+              <button
+                className="profile-activity-comment-cancel-btn"
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setChangingReaction(false);
+                  setError("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+
+            {error ? <p className="profile-activity-comment-action-error" role="alert">{error}</p> : null}
+          </div>
+        ) : null}
+      </div>
+
+      {deleteOpen && typeof document !== "undefined" ? createPortal(
+        <div className="profile-modal-backdrop about-field-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !saving) {
+            setDeleteOpen(false);
+            setError("");
+          }
+        }}>
+          <section className="profile-modal about-delete-modal card" role="dialog" aria-modal="true" aria-labelledby={`activity-reaction-delete-${item.id}`}>
+            <div className="about-delete-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg></div>
+            <div className="about-delete-copy">
+              <span className="eyebrow">REACTION</span>
+              <h2 id={`activity-reaction-delete-${item.id}`}>Delete this reaction?</h2>
+              <p>This removes your reaction from this post.</p>
+            </div>
+            {error ? <p className="profile-form-error" role="alert">{error}</p> : null}
+            <footer className="profile-modal-footer">
+              <button className="profile-cancel-btn" type="button" disabled={saving} onClick={() => { setDeleteOpen(false); setError(""); }}>Cancel</button>
+              <button className="about-delete-confirm" type="button" disabled={saving} onClick={() => void deleteReaction()}>{saving ? "Deleting…" : "Delete"}</button>
+            </footer>
+          </section>
+        </div>,
+        document.body,
+      ) : null}
+    </>
+  );
+}
+
+function ActivityCommentDetail({
+  item,
+  currentUsername,
+  onUpdated,
+  onDeleted,
+  onShowToast,
+}: {
+  item: ProfileActivityItem;
+  currentUsername: string;
+  onUpdated: (commentId: string, text: string) => void;
+  onDeleted: (commentId: string, postId: string, count: number) => void;
+  onShowToast: (message: string) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editingComment, setEditingComment] = useState(false);
+  const [draft, setDraft] = useState(item.text || "");
+  const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [error, setError] = useState("");
+  const actionShellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setDraft(item.text || "");
+  }, [item.text]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && actionShellRef.current?.contains(target)) return;
+      setMenuOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
+  const profileHref = item.postAuthorProfile
+    ? item.postAuthorProfile.handle.toLowerCase() === `@${currentUsername.toLowerCase()}`
+      ? "/#profile"
+      : `/profile/${encodeURIComponent(item.postAuthorProfile.id)}`
+    : "/#profile";
+
+  const beginEdit = () => {
+    setMenuOpen(false);
+    setError("");
+    setDraft(item.text || "");
+    setEditingComment(true);
+  };
+
+  const cancelEdit = () => {
+    if (saving) return;
+    setDraft(item.text || "");
+    setError("");
+    setEditingComment(false);
+  };
+
+  const saveComment = async () => {
+    const text = draft.trim();
+    if (!text || saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/posts/${encodeURIComponent(item.postId)}/comments/${encodeURIComponent(item.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, markEdited: false }),
+      });
+      const payload = (await response.json().catch(() => null)) as { comment?: { text?: string }; error?: string } | null;
+      if (!response.ok || !payload?.comment?.text) {
+        setError(payload?.error || "Could not edit this comment.");
+        return;
+      }
+      onUpdated(item.id, payload.comment.text);
+      setDraft(payload.comment.text);
+      setEditingComment(false);
+      onShowToast("Comment updated");
+    } catch {
+      setError("Could not edit this comment.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteComment = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/posts/${encodeURIComponent(item.postId)}/comments/${encodeURIComponent(item.id)}`, {
+        method: "DELETE",
+      });
+      const payload = (await response.json().catch(() => null)) as { deleted?: boolean; count?: number; error?: string } | null;
+      if (!response.ok || !payload?.deleted || typeof payload.count !== "number") {
+        setError(payload?.error || "Could not delete this comment.");
+        return;
+      }
+      setDeleteOpen(false);
+      onDeleted(item.id, item.postId, payload.count);
+      onShowToast("Comment deleted");
+    } catch {
+      setError("Could not delete this comment.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!item.postAuthorProfile) return item.text ? <p className="profile-activity-comment-text">{item.text}</p> : null;
+
+  return (
+    <>
+      <div className={`profile-activity-comment-detail${editingComment ? " editing" : ""}`}>
+        <div className="profile-activity-post-author">
+          <UserAvatar
+            initials={item.postAuthorProfile.initials}
+            image={item.postAuthorProfile.avatarUrl}
+            theme={item.postAuthorProfile.avatarTheme}
+            className="profile-avatar profile-activity-author-avatar"
+            alt={`${item.postAuthorProfile.name} profile photo`}
+          />
+          <div className="profile-activity-post-author-meta">
+            <strong>{item.postAuthorProfile.name}</strong>
+            <span>{item.postAuthorProfile.handle}</span>
+            {!editingComment && item.text ? <p className="profile-activity-comment-text">{item.text}</p> : null}
+          </div>
+          <div className="profile-activity-comment-action-shell" ref={actionShellRef}>
+            <button
+              className="profile-activity-comment-action-trigger"
+              type="button"
+              aria-label="Comment actions"
+              title="Comment actions"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((current) => !current)}
+            >
+              <FontAwesomeEllipsisIcon />
+            </button>
+            {menuOpen ? (
+              <div className="profile-media-action-menu profile-activity-comment-action-menu" role="menu" aria-label="Comment actions">
+                <a href={profileHref} role="menuitem" onClick={() => setMenuOpen(false)}><span><FontAwesomeUserIcon /></span>View Profile</a>
+                <button type="button" role="menuitem" onClick={beginEdit}><span><FontAwesomeEditIcon /></span>Edit Comment</button>
+                <button className="danger" type="button" role="menuitem" onClick={() => { setMenuOpen(false); setError(""); setDeleteOpen(true); }}><span><FontAwesomeDeleteIcon /></span>Delete Comment</button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {editingComment ? (
+          <div className="profile-activity-comment-editor-wrap">
+            <textarea
+              className="profile-activity-comment-editor"
+              value={draft}
+              maxLength={500}
+              autoFocus
+              disabled={saving}
+              onChange={(event) => setDraft(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") cancelEdit();
+                if ((event.ctrlKey || event.metaKey) && event.key === "Enter") void saveComment();
+              }}
+            />
+            <div className="profile-activity-comment-editor-actions" aria-label="Comment editor actions">
+              <button
+                className="profile-activity-comment-cancel-btn"
+                type="button"
+                disabled={saving}
+                onClick={cancelEdit}
+              >
+                Cancel
+              </button>
+              <button
+                className="profile-activity-comment-save-btn"
+                type="button"
+                disabled={saving || !draft.trim()}
+                onClick={() => void saveComment()}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+            {error ? <p className="profile-activity-comment-action-error" role="alert">{error}</p> : null}
+          </div>
+        ) : null}
+      </div>
+      {deleteOpen && typeof document !== "undefined" ? createPortal(
+        <div className="profile-modal-backdrop about-field-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !saving) {
+            setDeleteOpen(false);
+            setError("");
+          }
+        }}>
+          <section className="profile-modal about-delete-modal card" role="dialog" aria-modal="true" aria-labelledby={`activity-comment-delete-${item.id}`}>
+            <div className="about-delete-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg></div>
+            <div className="about-delete-copy">
+              <span className="eyebrow">COMMENT</span>
+              <h2 id={`activity-comment-delete-${item.id}`}>Delete this comment?</h2>
+              <p>This removes your comment and its conversation replies from this post.</p>
+            </div>
+            {error ? <p className="profile-form-error" role="alert">{error}</p> : null}
+            <footer className="profile-modal-footer">
+              <button className="profile-cancel-btn" type="button" disabled={saving} onClick={() => { setDeleteOpen(false); setError(""); }}>Cancel</button>
+              <button className="about-delete-confirm" type="button" disabled={saving} onClick={() => void deleteComment()}>{saving ? "Deleting…" : "Delete"}</button>
+            </footer>
+          </section>
+        </div>,
+        document.body,
+      ) : null}
+    </>
+  );
+}
+
+
+function ActivityReplyDetail({
+  item,
+  currentUsername,
+  onUpdated,
+  onDeleted,
+  onShowToast,
+}: {
+  item: ProfileActivityItem;
+  currentUsername: string;
+  onUpdated: (replyId: string, text: string) => void;
+  onDeleted: (replyId: string) => void;
+  onShowToast: (message: string) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editingReply, setEditingReply] = useState(false);
+  const [draft, setDraft] = useState(item.text || "");
+  const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [error, setError] = useState("");
+  const actionShellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setDraft(item.text || "");
+  }, [item.text]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && actionShellRef.current?.contains(target)) return;
+      setMenuOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
+
+  const profileHref = item.postAuthorProfile
+    ? item.postAuthorProfile.handle.toLowerCase() === `@${currentUsername.toLowerCase()}`
+      ? "/#profile"
+      : `/profile/${encodeURIComponent(item.postAuthorProfile.id)}`
+    : "/#profile";
+
+  const beginEdit = () => {
+    setMenuOpen(false);
+    setError("");
+    setDraft(item.text || "");
+    setEditingReply(true);
+  };
+
+  const cancelEdit = () => {
+    if (saving) return;
+    setDraft(item.text || "");
+    setError("");
+    setEditingReply(false);
+  };
+
+  const saveReply = async () => {
+    const text = draft.trim();
+    if (!text || saving || !item.commentId) return;
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/posts/${encodeURIComponent(item.postId)}/comments/${encodeURIComponent(item.commentId)}/replies/${encodeURIComponent(item.id)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        },
+      );
+      const payload = (await response.json().catch(() => null)) as { reply?: { text?: string }; error?: string } | null;
+      if (!response.ok || !payload?.reply?.text) {
+        setError(payload?.error || "Could not edit this reply.");
+        return;
+      }
+      onUpdated(item.id, payload.reply.text);
+      setDraft(payload.reply.text);
+      setEditingReply(false);
+      onShowToast("Reply updated");
+    } catch {
+      setError("Could not edit this reply.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteReply = async () => {
+    if (saving || !item.commentId) return;
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/posts/${encodeURIComponent(item.postId)}/comments/${encodeURIComponent(item.commentId)}/replies/${encodeURIComponent(item.id)}`,
+        { method: "DELETE" },
+      );
+      const payload = (await response.json().catch(() => null)) as { deleted?: boolean; error?: string } | null;
+      if (!response.ok || !payload?.deleted) {
+        setError(payload?.error || "Could not delete this reply.");
+        return;
+      }
+      setDeleteOpen(false);
+      onDeleted(item.id);
+      onShowToast("Reply deleted");
+    } catch {
+      setError("Could not delete this reply.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!item.postAuthorProfile) return item.text ? <p className="profile-activity-comment-text">{item.text}</p> : null;
+
+  return (
+    <>
+      <div className={`profile-activity-comment-detail profile-activity-reply-detail${editingReply ? " editing" : ""}`}>
+        <div className="profile-activity-post-author">
+          <UserAvatar
+            initials={item.postAuthorProfile.initials}
+            image={item.postAuthorProfile.avatarUrl}
+            theme={item.postAuthorProfile.avatarTheme}
+            className="profile-avatar profile-activity-author-avatar"
+            alt={`${item.postAuthorProfile.name} profile photo`}
+          />
+          <div className="profile-activity-post-author-meta">
+            <strong>{item.postAuthorProfile.name}</strong>
+            <span>{item.postAuthorProfile.handle}</span>
+            {!editingReply && item.text ? <p className="profile-activity-comment-text">{item.text}</p> : null}
+          </div>
+          <div className="profile-activity-comment-action-shell" ref={actionShellRef}>
+            <button
+              className="profile-activity-comment-action-trigger"
+              type="button"
+              aria-label="Reply actions"
+              title="Reply actions"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((current) => !current)}
+            >
+              <FontAwesomeEllipsisIcon />
+            </button>
+            {menuOpen ? (
+              <div className="profile-media-action-menu profile-activity-comment-action-menu" role="menu" aria-label="Reply actions">
+                <a href={profileHref} role="menuitem" onClick={() => setMenuOpen(false)}><span><FontAwesomeUserIcon /></span>View Profile</a>
+                <button type="button" role="menuitem" onClick={beginEdit}><span><FontAwesomeEditIcon /></span>Edit Reply</button>
+                <button className="danger" type="button" role="menuitem" onClick={() => { setMenuOpen(false); setError(""); setDeleteOpen(true); }}><span><FontAwesomeDeleteIcon /></span>Delete Reply</button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+        {editingReply ? (
+          <div className="profile-activity-comment-editor-wrap">
+            <textarea
+              className="profile-activity-comment-editor"
+              value={draft}
+              maxLength={500}
+              autoFocus
+              disabled={saving}
+              onChange={(event) => setDraft(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") cancelEdit();
+                if ((event.ctrlKey || event.metaKey) && event.key === "Enter") void saveReply();
+              }}
+            />
+            <div className="profile-activity-comment-editor-actions" aria-label="Reply editor actions">
+              <button
+                className="profile-activity-comment-cancel-btn"
+                type="button"
+                disabled={saving}
+                onClick={cancelEdit}
+              >
+                Cancel
+              </button>
+              <button
+                className="profile-activity-comment-save-btn"
+                type="button"
+                disabled={saving || !draft.trim() || !item.commentId}
+                onClick={() => void saveReply()}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+            {error ? <p className="profile-activity-comment-action-error" role="alert">{error}</p> : null}
+          </div>
+        ) : null}
+      </div>
+      {deleteOpen && typeof document !== "undefined" ? createPortal(
+        <div className="profile-modal-backdrop about-field-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !saving) {
+            setDeleteOpen(false);
+            setError("");
+          }
+        }}>
+          <section className="profile-modal about-delete-modal card" role="dialog" aria-modal="true" aria-labelledby={`activity-reply-delete-${item.id}`}>
+            <div className="about-delete-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg></div>
+            <div className="about-delete-copy">
+              <span className="eyebrow">REPLY</span>
+              <h2 id={`activity-reply-delete-${item.id}`}>Delete this reply?</h2>
+              <p>This removes your reply and any replies beneath it from this conversation.</p>
+            </div>
+            {error ? <p className="profile-form-error" role="alert">{error}</p> : null}
+            <footer className="profile-modal-footer">
+              <button className="profile-cancel-btn" type="button" disabled={saving} onClick={() => { setDeleteOpen(false); setError(""); }}>Cancel</button>
+              <button className="about-delete-confirm" type="button" disabled={saving} onClick={() => void deleteReply()}>{saving ? "Deleting…" : "Delete"}</button>
+            </footer>
+          </section>
+        </div>,
+        document.body,
+      ) : null}
+    </>
+  );
+}
+
+function ActivityManagementIcon({ type }: { type: "manage" | "select" | "type" | "time" | "calendar" | "trash" | "back" }) {
+  if (type === "select") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Regular: Square Check */}
+        <path d="M64 80c-8.8 0-16 7.2-16 16l0 320c0 8.8 7.2 16 16 16l320 0c8.8 0 16-7.2 16-16l0-320c0-8.8-7.2-16-16-16L64 80zM0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zM337 209L209 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L303 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z" />
+      </svg>
+    );
+  }
+  if (type === "type") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 576 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Solid: Layer Group */}
+        <path d="M264.5 5.2c14.9-6.9 32.1-6.9 47 0l218.6 101c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 149.8C37.4 145.8 32 137.3 32 128s5.4-17.9 13.9-21.8L264.5 5.2zM476.9 209.6l53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 277.8C37.4 273.8 32 265.3 32 256s5.4-17.9 13.9-21.8l53.2-24.6 152 70.2c23.4 10.8 50.4 10.8 73.8 0l152-70.2zm-152 198.2l152-70.2 53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 405.8C37.4 401.8 32 393.3 32 384s5.4-17.9 13.9-21.8l53.2-24.6 152 70.2c23.4 10.8 50.4 10.8 73.8 0z" />
+      </svg>
+    );
+  }
+  if (type === "time") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Solid: Clock Rotate Left */}
+        <path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9L0 168c0 13.3 10.7 24 24 24l110.1 0c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24l0 104c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65 0-94.1c0-13.3-10.7-24-24-24z" />
+      </svg>
+    );
+  }
+  if (type === "calendar") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Regular: Calendar Days */}
+        <path d="M152 24c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40L64 64C28.7 64 0 92.7 0 128l0 16 0 48L0 448c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-256 0-48 0-16c0-35.3-28.7-64-64-64l-40 0 0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40L152 64l0-40zM48 192l80 0 0 56-80 0 0-56zm0 104l80 0 0 64-80 0 0-64zm128 0l96 0 0 64-96 0 0-64zm144 0l80 0 0 64-80 0 0-64zm80-48l-80 0 0-56 80 0 0 56zm0 160l0 40c0 8.8-7.2 16-16 16l-64 0 0-56 80 0zm-128 0l0 56-96 0 0-56 96 0zm-144 0l0 56-64 0c-8.8 0-16-7.2-16-16l0-40 80 0zM272 248l-96 0 0-56 96 0 0 56z" />
+      </svg>
+    );
+  }
+  if (type === "trash") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Regular: Trash Can */}
+        <path d="M170.5 51.6L151.5 80l145 0-19-28.4c-1.5-2.2-4-3.6-6.7-3.6l-93.7 0c-2.7 0-5.2 1.3-6.7 3.6zm147-26.6L354.2 80 368 80l48 0 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-8 0 0 304c0 44.2-35.8 80-80 80l-224 0c-44.2 0-80-35.8-80-80l0-304-8 0c-13.3 0-24-10.7-24-24S10.7 80 24 80l8 0 48 0 13.8 0 36.7-55.1C140.9 9.4 158.4 0 177.1 0l93.7 0c18.7 0 36.2 9.4 46.6 24.9zM80 128l0 304c0 17.7 14.3 32 32 32l224 0c17.7 0 32-14.3 32-32l0-304L80 128zm80 64l0 208c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-208c0-8.8 7.2-16 16-16s16 7.2 16 16zm80 0l0 208c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-208c0-8.8 7.2-16 16-16s16 7.2 16 16zm80 0l0 208c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-208c0-8.8 7.2-16 16-16s16 7.2 16 16z" />
+      </svg>
+    );
+  }
+  if (type === "back") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Solid: Arrow Left */}
+        <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 6h14M5 12h14M5 18h14" />
+      <circle cx="9" cy="6" r="2" />
+      <circle cx="15" cy="12" r="2" />
+      <circle cx="11" cy="18" r="2" />
+    </svg>
+  );
+}
+
+function ActivityManagementTypeIcon({ type }: { type: "react" | "comment" | "reply" }) {
+  if (type === "react") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Regular: Face Smile */}
+        <path d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm177.6 62.1C192.8 334.5 218.8 352 256 352s63.2-17.5 78.4-33.9c9-9.7 24.2-10.4 33.9-1.4s10.4 24.2 1.4 33.9c-22 23.8-60 49.4-113.6 49.4s-91.7-25.5-113.6-49.4c-9-9.7-8.4-24.9 1.4-33.9s24.9-8.4 33.9 1.4zM144.4 208a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm192-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+      </svg>
+    );
+  }
+  if (type === "comment") {
+    return (
+      <svg className="fa-activity-management-icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+        {/* Font Awesome Free Regular: Comment Dots */}
+        <path d="M168.2 384.9c-15-5.4-31.7-3.1-44.6 6.4c-8.2 6-22.3 14.8-39.4 22.7c5.6-14.7 9.9-31.3 11.3-49.4c1-12.9-3.3-25.7-11.8-35.5C60.4 302.8 48 272 48 240c0-79.5 83.3-160 208-160s208 80.5 208 160s-83.3 160-208 160c-31.6 0-61.3-5.5-87.8-15.1zM26.3 423.8c-1.6 2.7-3.3 5.4-5.1 8.1l-.3 .5c-1.6 2.3-3.2 4.6-4.8 6.9c-3.5 4.7-7.3 9.3-11.3 13.5c-4.6 4.6-5.9 11.4-3.4 17.4c2.5 6 8.3 9.9 14.8 9.9c5.1 0 10.2-.3 15.3-.8l.7-.1c4.4-.5 8.8-1.1 13.2-1.9c.8-.1 1.6-.3 2.4-.5c17.8-3.5 34.9-9.5 50.1-16.1c22.9-10 42.4-21.9 54.3-30.6c31.8 11.5 67 17.9 104.1 17.9c141.4 0 256-93.1 256-208S397.4 32 256 32S0 125.1 0 240c0 45.1 17.7 86.8 47.7 120.9c-1.9 24.5-11.4 46.3-21.4 62.9zM144 272a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm144-32a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm80 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z" />
+      </svg>
+    );
+  }
+  return (
+    <svg className="fa-activity-management-icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+      {/* Font Awesome Free Solid: Repeat */}
+      <path d="M0 224c0 17.7 14.3 32 32 32s32-14.3 32-32c0-53 43-96 96-96l160 0 0 32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S320 19.1 320 32l0 32L160 64C71.6 64 0 135.6 0 224zm512 64c0-17.7-14.3-32-32-32s-32 14.3-32 32c0 53-43 96-96 96l-160 0 0-32c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6l0-32 160 0c88.4 0 160-71.6 160-160z" />
+    </svg>
+  );
+}
+
+function ActivityManagementChevronIcon() {
+  return (
+    <svg className="fa-activity-management-chevron" viewBox="0 0 320 512" aria-hidden="true" focusable="false">
+      {/* Font Awesome Free Solid: Chevron Right */}
+      <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z" />
+    </svg>
+  );
+}
+
+
+function ActivityAppleDateFilterCalendar({
+  mode,
+  value,
+  onModeChange,
+  onChange,
+}: {
+  mode: "day" | "month" | "year";
+  value: string;
+  onModeChange: (mode: "day" | "month" | "year") => void;
+  onChange: (value: string) => void;
+}) {
+  const minDate = useMemo(() => new Date(1970, 0, 1), []);
+  const maxDate = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
+
+  const selectedDate = useMemo(() => {
+    if (!value) return null;
+    if (mode === "day") return parseIsoDate(value);
+    if (mode === "month") {
+      const [year, month] = value.split("-").map(Number);
+      if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return null;
+      return new Date(year, month - 1, 1);
+    }
+    const year = Number(value);
+    return Number.isInteger(year) && year >= 1970 && year <= 9999 ? new Date(year, 0, 1) : null;
+  }, [mode, value]);
+
+  const [viewDate, setViewDate] = useState(() => monthStart(selectedDate || maxDate));
+  const selectedYearRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (selectedDate) {
+      setViewDate(monthStart(selectedDate));
+      return;
+    }
+    setViewDate((current) => {
+      const year = Math.min(Math.max(current.getFullYear(), 1970), maxDate.getFullYear());
+      const month = Math.min(current.getMonth(), year === maxDate.getFullYear() ? maxDate.getMonth() : 11);
+      return new Date(year, month, 1);
+    });
+  }, [mode, selectedDate, maxDate]);
+
+  useEffect(() => {
+    if (mode !== "year") return;
+    requestAnimationFrame(() => selectedYearRef.current?.scrollIntoView({ block: "center" }));
+  }, [mode, value]);
+
+  const yearLabel = viewDate.getFullYear();
+  const monthLabel = viewDate.toLocaleDateString("en-US", { month: "long" });
+  const weekdayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  const calendarCells = useMemo(() => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDayOffset = new Date(year, month, 1).getDay();
+    const start = new Date(year, month, 1 - firstDayOffset);
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
+      return {
+        date,
+        outsideMonth: date.getMonth() !== month,
+        disabled: date < minDate || date > maxDate,
+      };
+    });
+  }, [viewDate, minDate, maxDate]);
+
+  const firstVisibleMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+  const minMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  const maxMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+  const canGoPrevious = mode === "day" ? firstVisibleMonth > minMonth : yearLabel > 1970;
+  const canGoNext = mode === "day" ? firstVisibleMonth < maxMonth : yearLabel < maxDate.getFullYear();
+
+  const previous = () => {
+    if (mode === "day") {
+      if (canGoPrevious) setViewDate((current) => addMonths(current, -1));
+      return;
+    }
+    if (mode === "month" && canGoPrevious) {
+      setViewDate((current) => new Date(current.getFullYear() - 1, current.getMonth(), 1));
+    }
+  };
+
+  const next = () => {
+    if (mode === "day") {
+      if (canGoNext) setViewDate((current) => addMonths(current, 1));
+      return;
+    }
+    if (mode === "month" && canGoNext) {
+      setViewDate((current) => {
+        const nextYear = current.getFullYear() + 1;
+        const nextMonth = Math.min(current.getMonth(), nextYear === maxDate.getFullYear() ? maxDate.getMonth() : 11);
+        return new Date(nextYear, nextMonth, 1);
+      });
+    }
+  };
+
+  const selectedMonth = mode === "month" && selectedDate
+    ? { year: selectedDate.getFullYear(), month: selectedDate.getMonth() }
+    : null;
+  const selectedYear = mode === "year" && selectedDate ? selectedDate.getFullYear() : null;
+  const years = useMemo(
+    () => Array.from({ length: maxDate.getFullYear() - 1970 + 1 }, (_, index) => 1970 + index),
+    [maxDate],
+  );
+
+  const chooseToday = () => {
+    setViewDate(monthStart(maxDate));
+    if (mode === "day") {
+      onChange(formatIsoDate(maxDate));
+      return;
+    }
+    if (mode === "month") {
+      onChange(`${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, "0")}`);
+      return;
+    }
+    onChange(String(maxDate.getFullYear()));
+  };
+
+  return (
+    <div className="profile-activity-apple-calendar" aria-label="Activity date filter calendar">
+      <div className="profile-activity-date-scope" role="tablist" aria-label="Filter period">
+        {(["day", "month", "year"] as const).map((scope) => (
+          <button
+            key={scope}
+            type="button"
+            role="tab"
+            aria-selected={mode === scope}
+            className={mode === scope ? "active" : ""}
+            onClick={() => onModeChange(scope)}
+          >
+            {scope === "day" ? "Day" : scope === "month" ? "Month" : "Year"}
+          </button>
+        ))}
+      </div>
+
+      <div className="apple-calendar-header profile-activity-apple-calendar-header">
+        <button
+          type="button"
+          className="apple-calendar-nav"
+          aria-label={mode === "day" ? "Previous month" : "Previous year"}
+          onClick={previous}
+          disabled={mode === "year" || !canGoPrevious}
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5 5.5 5 5.5" /></svg>
+        </button>
+
+        <div className="apple-calendar-title profile-activity-apple-calendar-title" aria-live="polite">
+          {mode === "day" ? <strong>{monthLabel} {yearLabel}</strong> : null}
+          {mode === "month" ? <strong>{yearLabel}</strong> : null}
+          {mode === "year" ? <strong>Choose Year</strong> : null}
+        </div>
+
+        <button
+          type="button"
+          className="apple-calendar-nav"
+          aria-label={mode === "day" ? "Next month" : "Next year"}
+          onClick={next}
+          disabled={mode === "year" || !canGoNext}
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 4.5 5 5.5-5 5.5" /></svg>
+        </button>
+      </div>
+
+      <div className="apple-calendar-stage profile-activity-apple-calendar-stage" key={`${mode}-${yearLabel}-${viewDate.getMonth()}`}>
+        {mode === "day" ? (
+          <>
+            <div className="apple-calendar-weekdays" aria-hidden="true">
+              {weekdayLabels.map((day) => <span key={day}>{day}</span>)}
+            </div>
+            <div className="apple-calendar-grid">
+              {calendarCells.map(({ date, outsideMonth, disabled }) => {
+                const selected = sameCalendarDay(selectedDate, date);
+                const today = sameCalendarDay(maxDate, date);
+                return (
+                  <button
+                    key={formatIsoDate(date)}
+                    type="button"
+                    disabled={disabled}
+                    className={[
+                      outsideMonth ? "outside" : "",
+                      selected ? "selected" : "",
+                      today ? "today" : "",
+                    ].filter(Boolean).join(" ")}
+                    aria-label={date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    aria-pressed={selected}
+                    onClick={() => onChange(formatIsoDate(date))}
+                  >
+                    <span>{date.getDate()}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : null}
+
+        {mode === "month" ? (
+          <div className="apple-calendar-month-grid">
+            {Array.from({ length: 12 }, (_, monthIndex) => {
+              const date = new Date(yearLabel, monthIndex, 1);
+              const disabled = date < minMonth || date > maxMonth;
+              const selected = selectedMonth?.year === yearLabel && selectedMonth.month === monthIndex;
+              return (
+                <button
+                  key={monthIndex}
+                  type="button"
+                  disabled={disabled}
+                  className={selected ? "selected" : ""}
+                  onClick={() => onChange(`${yearLabel}-${String(monthIndex + 1).padStart(2, "0")}`)}
+                >
+                  {date.toLocaleDateString("en-US", { month: "short" })}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {mode === "year" ? (
+          <div className="apple-calendar-year-grid">
+            {years.map((year) => {
+              const selected = selectedYear === year;
+              return (
+                <button
+                  key={year}
+                  ref={year === (selectedYear ?? yearLabel) ? selectedYearRef : undefined}
+                  type="button"
+                  className={selected ? "selected" : ""}
+                  onClick={() => {
+                    onChange(String(year));
+                    const month = Math.min(viewDate.getMonth(), year === maxDate.getFullYear() ? maxDate.getMonth() : 11);
+                    setViewDate(new Date(year, month, 1));
+                  }}
+                >
+                  {year}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="apple-calendar-footer profile-activity-apple-calendar-footer">
+        <button type="button" className="subtle" disabled={!value} onClick={() => onChange("")}>Clear</button>
+        <button type="button" className="today" onClick={chooseToday}>Today</button>
+      </div>
+    </div>
+  );
+}
+
+function ActivityManageMenu({
+  counts,
+  busy,
+  initialView = "root",
+  initialCalendarMode = "day",
+  initialCalendarValue = "",
+  onStartSelection,
+  onStartTypeSelection,
+  onRequestRangeDelete,
+  onRequestDeleteAll,
+  onApplyCalendar,
+  onRequestCalendarDelete,
+  onCalendarBack,
+}: {
+  counts: Record<ProfileActivityFilter, number>;
+  busy: boolean;
+  initialView?: "root" | "type" | "time" | "calendar";
+  initialCalendarMode?: "day" | "month" | "year";
+  initialCalendarValue?: string;
+  onStartSelection: () => void;
+  onStartTypeSelection: (kind: ProfileActivityTab) => void;
+  onRequestRangeDelete: (range: ActivityDateRange) => void;
+  onRequestDeleteAll: () => void;
+  onApplyCalendar: (range: ActivityDateRange, mode: "day" | "month" | "year", value: string) => void;
+  onRequestCalendarDelete: (range: ActivityDateRange) => void;
+  onCalendarBack: () => void;
+}) {
+  const [view, setView] = useState<"root" | "type" | "time" | "calendar">(initialView);
+  const [calendarMode, setCalendarMode] = useState<"day" | "month" | "year">(initialCalendarMode);
+  const [calendarValue, setCalendarValue] = useState(initialCalendarValue);
+  const [calendarError, setCalendarError] = useState("");
+
+  const back = () => {
+    setCalendarError("");
+    if (view === "calendar") onCalendarBack();
+    setView("root");
+  };
+
+  const calendarRange = buildActivityCalendarRange(calendarMode, calendarValue);
+
+  const applyCalendar = () => {
+    if (!calendarRange) {
+      setCalendarError(`Choose a valid ${calendarMode}.`);
+      return;
+    }
+    setCalendarError("");
+    onApplyCalendar(calendarRange, calendarMode, calendarValue);
+  };
+
+  const deleteCalendar = () => {
+    if (!calendarRange) {
+      setCalendarError(`Choose a valid ${calendarMode}.`);
+      return;
+    }
+    setCalendarError("");
+    onRequestCalendarDelete(calendarRange);
+  };
+
+  if (view === "type") {
+    const options: Array<{ kind: ProfileActivityTab; label: string; count: number }> = [
+      { kind: "react", label: "Reactions", count: counts.react },
+      { kind: "comment", label: "Comments", count: counts.comment },
+      { kind: "reply", label: "Replies", count: counts.reply },
+    ];
+    return (
+      <div key="type" className="profile-activity-manage-menu" role="menu" aria-label="Delete activity by type">
+        <div className="profile-activity-manage-menu-head">
+          <button type="button" aria-label="Back" onClick={back}><ActivityManagementIcon type="back" /></button>
+          <div><strong>Delete by type</strong><span>Only the chosen activity type is targeted.</span></div>
+        </div>
+        <div className="profile-activity-manage-options">
+          {options.map((option) => (
+            <button key={option.kind} type="button" role="menuitem" disabled={busy || option.count === 0} onClick={() => onStartTypeSelection(option.kind)}>
+              <span className="profile-activity-manage-option-icon profile-activity-manage-type-icon"><ActivityManagementTypeIcon type={option.kind} /></span>
+              <span className="profile-activity-manage-option-copy"><strong>{option.label}</strong></span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "time") {
+    const options: Array<{ key: "hour" | "week" | "month" | "year"; label: string }> = [
+      { key: "hour", label: "Last Hour" },
+      { key: "week", label: "Last 7 Days" },
+      { key: "month", label: "Last 30 Days" },
+      { key: "year", label: "Last 1 Year" },
+    ];
+    return (
+      <div key="time" className="profile-activity-manage-menu" role="menu" aria-label="Delete activity by time range">
+        <div className="profile-activity-manage-menu-head">
+          <button type="button" aria-label="Back" onClick={back}><ActivityManagementIcon type="back" /></button>
+          <div><strong>Delete by time</strong><span>Remove activities from a specific period.</span></div>
+        </div>
+        <div className="profile-activity-manage-options">
+          {options.map((option) => (
+            <button key={option.key} type="button" role="menuitem" disabled={busy} onClick={() => onRequestRangeDelete(buildActivityRelativeRange(option.key))}>
+              <span className="profile-activity-manage-option-icon"><ActivityManagementIcon type="time" /></span>
+              <span className="profile-activity-manage-option-copy"><strong>{option.label}</strong></span>
+            </button>
+          ))}
+          <button className="danger" type="button" role="menuitem" disabled={busy || counts.all === 0} onClick={onRequestDeleteAll}>
+            <span className="profile-activity-manage-option-icon"><ActivityManagementIcon type="trash" /></span>
+            <span className="profile-activity-manage-option-copy"><strong>All Time</strong></span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "calendar") {
+    return (
+      <div key="calendar" className="profile-activity-manage-menu profile-activity-calendar-menu" role="menu" aria-label="Activity date filter">
+        <div className="profile-activity-manage-menu-head">
+          <button type="button" aria-label="Back" onClick={back}><ActivityManagementIcon type="back" /></button>
+          <div><strong>Date Filter</strong><span>Choose a day, month or year.</span></div>
+        </div>
+        <ActivityAppleDateFilterCalendar
+          mode={calendarMode}
+          value={calendarValue}
+          onModeChange={(nextMode) => {
+            setCalendarMode(nextMode);
+            setCalendarValue("");
+            setCalendarError("");
+          }}
+          onChange={(nextValue) => {
+            setCalendarValue(nextValue);
+            setCalendarError("");
+          }}
+        />
+        {calendarRange ? <div className="profile-activity-calendar-preview"><ActivityManagementIcon type="calendar" /><span>{calendarRange.label}</span></div> : null}
+        {calendarError ? <p className="profile-activity-manage-error" role="alert">{calendarError}</p> : null}
+        <div className="profile-activity-calendar-actions">
+          <button type="button" disabled={busy || !calendarRange} onClick={applyCalendar}>View activities</button>
+          <button className="danger" type="button" disabled={busy || !calendarRange} onClick={deleteCalendar}>Delete this period</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div key="root" className="profile-activity-manage-menu" role="menu" aria-label="Manage activity">
+      <div className="profile-activity-manage-options">
+        <button type="button" role="menuitem" disabled={busy || counts.all === 0} onClick={onStartSelection}>
+          <span className="profile-activity-manage-option-icon"><ActivityManagementIcon type="select" /></span>
+          <span className="profile-activity-manage-option-copy"><strong>Select Activities</strong></span>
+        </button>
+        <button type="button" role="menuitem" disabled={busy || counts.all === 0} onClick={() => setView("type")}>
+          <span className="profile-activity-manage-option-icon"><ActivityManagementIcon type="type" /></span>
+          <span className="profile-activity-manage-option-copy"><strong>Delete by Activity Type</strong></span>
+          <span className="profile-activity-manage-chevron"><ActivityManagementChevronIcon /></span>
+        </button>
+        <button type="button" role="menuitem" disabled={busy || counts.all === 0} onClick={() => setView("time")}>
+          <span className="profile-activity-manage-option-icon"><ActivityManagementIcon type="time" /></span>
+          <span className="profile-activity-manage-option-copy"><strong>Delete by Time Range</strong></span>
+          <span className="profile-activity-manage-chevron"><ActivityManagementChevronIcon /></span>
+        </button>
+        <button type="button" role="menuitem" disabled={busy} onClick={() => setView("calendar")}>
+          <span className="profile-activity-manage-option-icon"><ActivityManagementIcon type="calendar" /></span>
+          <span className="profile-activity-manage-option-copy"><strong>Date Filter</strong></span>
+          <span className="profile-activity-manage-chevron"><ActivityManagementChevronIcon /></span>
+        </button>
+      </div>
+      <div className="profile-activity-manage-danger-zone">
+        <button className="danger" type="button" role="menuitem" disabled={busy || counts.all === 0} onClick={onRequestDeleteAll}>
+          <span><ActivityManagementIcon type="trash" /></span>
+          <span><strong>Delete All Activities</strong></span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ActivitySelectionCircleIcon({ checked = false, className = "" }: { checked?: boolean; className?: string }) {
+  return (
+    <svg className={`profile-activity-select-icon${className ? ` ${className}` : ""}`} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle className="profile-activity-select-ring" cx="12" cy="12" r="9.5" />
+      <path className={`profile-activity-select-check${checked ? " is-visible" : ""}`} d="m8.8 12.1 2.1 2.1 4.6-4.6" />
+    </svg>
+  );
+}
+
+function ProfileActivityPanel({
+  filter,
+  items,
+  loading,
+  error,
+  currentUsername,
+  onReactionUpdated,
+  onReactionDeleted,
+  onCommentUpdated,
+  onCommentDeleted,
+  onReplyUpdated,
+  onReplyDeleted,
+  onShowToast,
+  selectionMode,
+  selectedKeys,
+  onToggleSelection,
+}: {
+  filter: ProfileActivityFilter;
   items: ProfileActivityItem[];
   loading: boolean;
   error: string;
+  currentUsername: string;
+  onReactionUpdated: (reactionId: string, type: ActivityReactionType, postId: string, count: number) => void;
+  onReactionDeleted: (reactionId: string, postId: string, count: number) => void;
+  onCommentUpdated: (commentId: string, text: string) => void;
+  onCommentDeleted: (commentId: string, postId: string, count: number) => void;
+  onReplyUpdated: (replyId: string, text: string) => void;
+  onReplyDeleted: (replyId: string) => void;
+  onShowToast: (message: string) => void;
+  selectionMode: boolean;
+  selectedKeys: Set<string>;
+  onToggleSelection: (item: ProfileActivityItem) => void;
 }) {
-  const emptyCopy = tab === "react"
-    ? "Posts you react to will appear here."
-    : tab === "comment"
-      ? "Comments you write will appear here."
-      : "Replies you write will appear here.";
+  const emptyCopy = filter === "all"
+    ? "Your reactions, comments, and replies will appear here."
+    : filter === "react"
+      ? "Posts you react to will appear here."
+      : filter === "comment"
+        ? "Comments you write will appear here."
+        : "Replies you write will appear here.";
+  const emptyTitle = filter === "all"
+    ? "Your activity is quiet"
+    : `No ${filter === "react" ? "reaction" : filter} activity yet`;
 
-  if (loading) return <div className="profile-activity-empty card">Loading {tab} activity…</div>;
-  if (error) return <div className="profile-activity-empty card">{error}</div>;
-  if (!items.length) return <div className="profile-activity-empty card"><strong>No {tab} activity yet</strong><span>{emptyCopy}</span></div>;
+  if (loading) return <div className="profile-activity-empty">Loading activity…</div>;
+  if (error) return <div className="profile-activity-empty profile-activity-error">{error}</div>;
+  if (!items.length) return <div className="profile-activity-empty"><strong>{emptyTitle}</strong><span>{emptyCopy}</span></div>;
+
+  const groups: Array<{ key: string; label: string; items: ProfileActivityItem[] }> = [];
+  for (const item of items) {
+    const key = activityDayKey(item.createdAt);
+    const existing = groups.find((group) => group.key === key);
+    if (existing) existing.items.push(item);
+    else groups.push({ key, label: activityDayLabel(item.createdAt), items: [item] });
+  }
 
   return (
-    <section className="profile-activity-list">
-      {items.map((item) => (
-        <article className="profile-activity-card card" key={item.id}>
-          <div className={`profile-activity-kind ${item.kind}`}>{item.kind === "react" ? "♥" : item.kind === "comment" ? "◌" : "↳"}</div>
-          <div className="profile-activity-copy">
-            <div><strong>{item.label === "LIKE" ? "Liked a post" : item.label}</strong><small>{activityTime(item.createdAt)}</small></div>
-            <p>{item.text}</p>
-            {item.context ? <blockquote>{item.kind === "reply" ? "Comment: " : "Post: "}{item.context}</blockquote> : null}
-            {item.postContext ? <blockquote>Post: {item.postContext}</blockquote> : null}
-            <span>On {item.postAuthor}&apos;s post</span>
+    <div className="profile-activity-stream show-separators">
+      {groups.map((group) => (
+        <section className="profile-activity-day" key={group.key} aria-label={group.label}>
+          <div className="profile-activity-day-label">
+            <span>{group.label}</span>
           </div>
-        </article>
+          <div className="profile-activity-timeline">
+            {group.items.map((item) => {
+              const itemKey = activityItemKey(item);
+              const selected = selectedKeys.has(itemKey);
+              return (
+              <article className={`profile-activity-card${selectionMode ? " is-selecting" : ""}${selected ? " is-selected" : ""}`} key={`${item.kind}-${item.id}`}>
+                {selectionMode ? (
+                  <label className="profile-activity-select-control" aria-label={`Select ${activityLabel(item)}`}>
+                    <input type="checkbox" checked={selected} onChange={() => onToggleSelection(item)} />
+                    <span aria-hidden="true">
+                      <ActivitySelectionCircleIcon checked={selected} />
+                    </span>
+                  </label>
+                ) : null}
+                <div className="profile-activity-marker" aria-hidden="true">
+                  <span className={`profile-activity-kind ${item.kind}${item.kind === "react" ? ` ${activityReactionClass(item.label)}` : ""}`}>
+                    {item.kind === "react" && isActivityReactionType(item.label)
+                      ? <ActivityReactionIcon type={item.label} />
+                      : <ActivityKindIcon kind={item.kind} />}
+                  </span>
+                </div>
+                <div className="profile-activity-copy">
+                  <header className="profile-activity-item-header">
+                    <div>
+                      <strong>{activityLabel(item)}</strong>
+                    </div>
+                    <time dateTime={item.createdAt}>{activityClock(item.createdAt)}</time>
+                  </header>
+                  {item.kind === "comment" ? (
+                    <ActivityCommentDetail
+                      item={item}
+                      currentUsername={currentUsername}
+                      onUpdated={onCommentUpdated}
+                      onDeleted={onCommentDeleted}
+                      onShowToast={onShowToast}
+                    />
+                  ) : item.kind === "react" ? (
+                    <ActivityReactionDetail
+                      item={item}
+                      currentUsername={currentUsername}
+                      onUpdated={onReactionUpdated}
+                      onDeleted={onReactionDeleted}
+                      onShowToast={onShowToast}
+                    />
+                  ) : item.kind === "reply" ? (
+                    <ActivityReplyDetail
+                      item={item}
+                      currentUsername={currentUsername}
+                      onUpdated={onReplyUpdated}
+                      onDeleted={onReplyDeleted}
+                      onShowToast={onShowToast}
+                    />
+                  ) : item.text ? <p>{item.text}</p> : null}
+                  {item.context && item.kind !== "comment" && item.kind !== "react" && item.kind !== "reply" ? (
+                    <div className="profile-activity-context">
+                      <span>{item.kind === "reply" ? "Comment" : "Post"}</span>
+                      <p>{item.context}</p>
+                    </div>
+                  ) : null}
+                  {item.postContext && item.kind !== "reply" ? (
+                    <div className="profile-activity-context">
+                      <span>Post</span>
+                      <p>{item.postContext}</p>
+                    </div>
+                  ) : null}
+                  <a
+                    className="profile-activity-source"
+                    href={activityPostHref(item.postId)}
+                    aria-label={`Open ${item.postAuthorProfile?.name || item.postAuthor}'s post`}
+                  >
+                    <span>On {item.postAuthorProfile?.name || item.postAuthor}&apos;s post</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                  </a>
+                </div>
+              </article>
+              );
+            })}
+          </div>
+        </section>
       ))}
-    </section>
+    </div>
   );
 }
 
@@ -2054,11 +3833,27 @@ export default function ProfileView({
   onCommentCountChange,
   onProfileUpdated,
   onShowToast,
+  hasOwnActiveStory,
+  onOpenOwnStory,
 }: ProfileViewProps) {
-  const [tab, setTab] = useState<ProfileTab>("posts");
+  const [tab, setTab] = useState<ProfileTab>("overview");
+  const [activityFilter, setActivityFilter] = useState<ProfileActivityFilter>("all");
   const [activityItems, setActivityItems] = useState<Partial<Record<ProfileActivityTab, ProfileActivityItem[]>>>({});
   const [activityLoading, setActivityLoading] = useState(false);
+  const [activityContentEpoch, setActivityContentEpoch] = useState(0);
   const [activityError, setActivityError] = useState("");
+  const [activityManageOpen, setActivityManageOpen] = useState(false);
+  const [activityManageInitialView, setActivityManageInitialView] = useState<"root" | "type" | "time" | "calendar">("root");
+  const [activitySelectionMode, setActivitySelectionMode] = useState(false);
+  const [activitySelectionSource, setActivitySelectionSource] = useState<"standard" | "type" | "date" | null>(null);
+  const [activityTypeReturnFilter, setActivityTypeReturnFilter] = useState<ProfileActivityFilter>("all");
+  const [activityDateReturnPicker, setActivityDateReturnPicker] = useState<{ mode: "day" | "month" | "year"; value: string }>({ mode: "day", value: "" });
+  const [activitySelectedKeys, setActivitySelectedKeys] = useState<Set<string>>(() => new Set());
+  const [activityDateRange, setActivityDateRange] = useState<ActivityDateRange | null>(null);
+  const [activityManageBusy, setActivityManageBusy] = useState(false);
+  const [activityManageError, setActivityManageError] = useState("");
+  const [activityDeleteConfirmation, setActivityDeleteConfirmation] = useState<ActivityDeleteConfirmation | null>(null);
+  const activityManageRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -2069,6 +3864,11 @@ export default function ProfileView({
   const [aboutSaving, setAboutSaving] = useState(false);
   const [aboutError, setAboutError] = useState("");
   const [aboutDeleteField, setAboutDeleteField] = useState<AboutField | null>(null);
+  const [mediaActionKind, setMediaActionKind] = useState<"profile" | "cover" | null>(null);
+  const [mediaEditorKind, setMediaEditorKind] = useState<"profile" | "cover" | null>(null);
+  const [mediaDeleteKind, setMediaDeleteKind] = useState<"profile" | "cover" | null>(null);
+  const [mediaDeleting, setMediaDeleting] = useState(false);
+  const [mediaDeleteError, setMediaDeleteError] = useState("");
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState("");
@@ -2128,30 +3928,297 @@ export default function ProfileView({
     ? currentUser.aboutEmail || currentUser.email
     : "";
 
-  useEffect(() => {
-    if (tab !== "react" && tab !== "comment" && tab !== "reply") return;
+  const selectedActivityItems = useMemo<ProfileActivityItem[]>(() => {
+    const selected = activityFilter === "all"
+      ? (["react", "comment", "reply"] as ProfileActivityTab[]).flatMap((type) => activityItems[type] || [])
+      : activityItems[activityFilter] || [];
 
-    let cancelled = false;
+    return [...selected].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [activityFilter, activityItems]);
+
+  const activityCounts = useMemo<Record<ProfileActivityFilter, number>>(() => {
+    const react = activityItems.react?.length || 0;
+    const comment = activityItems.comment?.length || 0;
+    const reply = activityItems.reply?.length || 0;
+    return { all: react + comment + reply, react, comment, reply };
+  }, [activityItems]);
+
+  const allLoadedActivityItems = useMemo<ProfileActivityItem[]>(() => (
+    (["react", "comment", "reply"] as ProfileActivityTab[]).flatMap((type) => activityItems[type] || [])
+  ), [activityItems]);
+
+  const selectedActivityDeleteItems = useMemo(() => (
+    allLoadedActivityItems
+      .filter((item) => activitySelectedKeys.has(activityItemKey(item)))
+      .map((item) => ({ kind: item.kind, id: item.id }))
+  ), [allLoadedActivityItems, activitySelectedKeys]);
+
+  const toggleActivitySelection = (item: ProfileActivityItem) => {
+    const key = activityItemKey(item);
+    setActivitySelectedKeys((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const startActivitySelection = () => {
+    setActivityManageOpen(false);
+    setActivityManageInitialView("root");
+    setActivityManageError("");
+    setActivitySelectedKeys(new Set());
+    setActivitySelectionSource("standard");
+    setActivitySelectionMode(true);
+  };
+
+  const startActivityTypeSelection = (kind: ProfileActivityTab) => {
+    setActivityTypeReturnFilter(activityFilter);
+    setActivityManageOpen(false);
+    setActivityManageError("");
+    setActivitySelectedKeys(new Set());
+    setActivityFilter(kind);
+    setActivitySelectionSource("type");
+    setActivitySelectionMode(true);
+  };
+
+  const cancelActivitySelection = () => {
+    if (activityManageBusy) return;
+    const returnToTypeMenu = activitySelectionSource === "type";
+    const returnToDateFilter = activitySelectionSource === "date";
+    setActivitySelectedKeys(new Set());
+    setActivitySelectionMode(false);
+    setActivitySelectionSource(null);
+    setActivityManageError("");
+
+    if (returnToTypeMenu) {
+      setActivityFilter(activityTypeReturnFilter);
+      setActivityManageInitialView("type");
+      setActivityManageOpen(true);
+      return;
+    }
+
+    if (returnToDateFilter) {
+      setActivityManageInitialView("calendar");
+      setActivityManageOpen(true);
+    }
+  };
+
+  const allVisibleActivitySelected = selectedActivityItems.length > 0
+    && selectedActivityItems.every((item) => activitySelectedKeys.has(activityItemKey(item)));
+
+  const toggleAllVisibleActivity = () => {
+    setActivitySelectedKeys((current) => {
+      const next = new Set(current);
+      const allCurrentlySelected = selectedActivityItems.length > 0
+        && selectedActivityItems.every((item) => next.has(activityItemKey(item)));
+
+      selectedActivityItems.forEach((item) => {
+        const key = activityItemKey(item);
+        if (allCurrentlySelected) next.delete(key);
+        else next.add(key);
+      });
+
+      return next;
+    });
+  };
+
+  const requestActivityDelete = (confirmation: ActivityDeleteConfirmation) => {
+    setActivityManageOpen(false);
+    setActivityManageError("");
+    setActivityDeleteConfirmation(confirmation);
+  };
+
+  const requestSelectedActivityDelete = () => {
+    if (!selectedActivityDeleteItems.length) return;
+    requestActivityDelete({
+      title: `Delete ${selectedActivityDeleteItems.length} selected ${selectedActivityDeleteItems.length === 1 ? "activity" : "activities"}?`,
+      copy: "The selected reactions, comments or replies will be removed from Gupto. This action cannot be undone.",
+      successMessage: `${selectedActivityDeleteItems.length} selected ${selectedActivityDeleteItems.length === 1 ? "activity" : "activities"} deleted`,
+      payload: { mode: "selected", items: selectedActivityDeleteItems },
+    });
+  };
+
+  const applyActivityDateRange = (range: ActivityDateRange, mode: "day" | "month" | "year", value: string) => {
+    setActivityDateReturnPicker({ mode, value });
+    setActivityManageOpen(false);
+    setActivityFilter("all");
+    setActivityDateRange(range);
+    setActivitySelectedKeys(new Set());
+    setActivitySelectionSource("date");
+    setActivitySelectionMode(true);
+    setActivityManageError("");
+  };
+
+  const clearActivityDateRange = () => {
+    setActivityDateRange(null);
+    setActivitySelectedKeys(new Set());
+    setActivitySelectionMode(false);
+    setActivityManageError("");
+  };
+
+  const performActivityManagementDelete = async () => {
+    if (!activityDeleteConfirmation || activityManageBusy) return;
+    const confirmation = activityDeleteConfirmation;
+    setActivityManageBusy(true);
+    setActivityManageError("");
+    try {
+      const response = await fetch("/api/profile/activity/manage", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(confirmation.payload),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        deleted?: number;
+        reactionCounts?: Array<{ postId: string; count: number }>;
+        commentCounts?: Array<{ postId: string; count: number }>;
+        error?: string;
+      } | null;
+      if (!response.ok || typeof payload?.deleted !== "number") {
+        setActivityManageError(payload?.error || "Could not delete the selected activity.");
+        return;
+      }
+
+      (payload.reactionCounts || []).forEach(({ postId, count }) => {
+        onPostUpdated(postId, { liked: false, reactionType: null, likeCount: count });
+      });
+      (payload.commentCounts || []).forEach(({ postId, count }) => {
+        onCommentCountChange(postId, count);
+      });
+
+      const nextRange = confirmation.payload.mode === "all" ? null : activityDateRange;
+      if (confirmation.payload.mode === "all") setActivityDateRange(null);
+      setActivitySelectedKeys(new Set());
+      setActivitySelectionMode(false);
+      setActivitySelectionSource(null);
+      setActivityDeleteConfirmation(null);
+
+      try {
+        const refreshed = await fetchProfileActivityBundle(nextRange);
+        setActivityItems(refreshed);
+      } catch {
+        setActivityError("Activity was deleted, but the Activity view could not refresh. Reload the page to sync it.");
+      }
+      onShowToast(confirmation.successMessage);
+    } catch {
+      setActivityManageError("Could not delete the selected activity.");
+    } finally {
+      setActivityManageBusy(false);
+    }
+  };
+
+  const updateActivityReaction = (reactionId: string, type: ActivityReactionType, postId: string, count: number) => {
+    setActivityItems((current) => ({
+      ...current,
+      react: (current.react || []).map((item) => item.id === reactionId ? { ...item, label: type } : item),
+    }));
+    onPostUpdated(postId, { liked: true, reactionType: type, likeCount: count });
+  };
+
+  const deleteActivityReaction = (reactionId: string, postId: string, count: number) => {
+    setActivityItems((current) => ({
+      ...current,
+      react: (current.react || []).filter((item) => item.id !== reactionId),
+    }));
+    onPostUpdated(postId, { liked: false, reactionType: null, likeCount: count });
+  };
+
+  const updateActivityComment = (commentId: string, text: string) => {
+    setActivityItems((current) => ({
+      ...current,
+      comment: (current.comment || []).map((item) => item.id === commentId ? { ...item, text } : item),
+    }));
+  };
+
+  const deleteActivityComment = (commentId: string, postId: string, count: number) => {
+    setActivityItems((current) => ({
+      ...current,
+      comment: (current.comment || []).filter((item) => item.id !== commentId),
+      reply: (current.reply || []).filter((item) => item.commentId !== commentId),
+    }));
+    onCommentCountChange(postId, count);
+  };
+
+  const updateActivityReply = (replyId: string, text: string) => {
+    setActivityItems((current) => ({
+      ...current,
+      reply: (current.reply || []).map((item) => item.id === replyId ? { ...item, text } : item),
+    }));
+  };
+
+  const deleteActivityReply = (replyId: string) => {
+    setActivityItems((current) => ({
+      ...current,
+      reply: (current.reply || []).filter((item) => item.id !== replyId),
+    }));
+
+    // A parent reply deletion can cascade to child replies in Prisma. Refresh the
+    // reply activity lane so any cascaded descendants disappear immediately too.
+    void fetchProfileActivityBundle(activityDateRange)
+      .then((items) => setActivityItems((current) => ({ ...current, reply: items.reply })))
+      .catch(() => undefined);
+  };
+
+  useEffect(() => {
+    if (tab !== "activity") return;
+
+    const controller = new AbortController();
     setActivityLoading(true);
     setActivityError("");
 
-    fetch(`/api/profile/activity?type=${tab}`, { cache: "no-store" })
-      .then(async (response) => {
-        const payload = (await response.json().catch(() => null)) as { items?: ProfileActivityItem[]; error?: string } | null;
-        if (!response.ok || !payload?.items) throw new Error(payload?.error || "Could not load profile activity.");
-        if (!cancelled) setActivityItems((current) => ({ ...current, [tab]: payload.items! }));
+    fetchProfileActivityBundle(activityDateRange, controller.signal)
+      .then((items) => {
+        setActivityItems(items);
+        setActivityContentEpoch((current) => current + 1);
       })
       .catch((error: unknown) => {
-        if (!cancelled) setActivityError(error instanceof Error ? error.message : "Could not load profile activity.");
+        if (controller.signal.aborted) return;
+        setActivityError(error instanceof Error ? error.message : "Could not load profile activity.");
       })
       .finally(() => {
-        if (!cancelled) setActivityLoading(false);
+        if (!controller.signal.aborted) setActivityLoading(false);
       });
 
-    return () => {
-      cancelled = true;
+    return () => controller.abort();
+  }, [tab, activityDateRange?.from, activityDateRange?.to]);
+
+  useEffect(() => {
+    if (!activityManageOpen) return;
+    const close = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && activityManageRef.current?.contains(target)) return;
+      setActivityManageOpen(false);
     };
-  }, [tab]);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActivityManageOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [activityManageOpen]);
+
+  useEffect(() => {
+    if (!mediaActionKind) return;
+
+    const closeMediaActions = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest('[data-media-action-shell="true"]')) return;
+      setMediaActionKind(null);
+    };
+    const closeMediaActionsOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMediaActionKind(null);
+    };
+
+    document.addEventListener("pointerdown", closeMediaActions);
+    document.addEventListener("keydown", closeMediaActionsOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMediaActions);
+      document.removeEventListener("keydown", closeMediaActionsOnEscape);
+    };
+  }, [mediaActionKind]);
 
   useEffect(() => {
     const cover = coverHeroRef.current;
@@ -2311,6 +4378,108 @@ export default function ProfileView({
     }
   };
 
+  const renderAboutField = (field: AboutField) => {
+    if (!hasAboutValue(field)) return null;
+
+    if (field === "workplace") {
+      return (
+        <div className="profile-about-row" key={field}>
+          <span className="profile-about-icon"><AboutFieldIcon field={field} /></span>
+          <div className="profile-about-copy">
+            <small>Workplace</small>
+            <strong className="profile-about-link-list">
+              {currentUser.workplaces.map((workplace, index) => workplace.url ? (
+                <a
+                  key={`${workplace.name}|${workplace.url}|${index}`}
+                  href={workplace.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  title={workplace.url}
+                >
+                  <SocialLinkLogo url={workplace.url} size={16} />
+                  <span>{workplace.name || getSocialLinkLabel(workplace.url)}</span>
+                </a>
+              ) : (
+                <span key={`${workplace.name}|${index}`}>{workplace.name}</span>
+              ))}
+            </strong>
+          </div>
+          <AboutRowActions field={field} canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
+        </div>
+      );
+    }
+
+    if (field === "interests") {
+      return (
+        <div className="profile-about-row" key={field}>
+          <span className="profile-about-icon"><AboutFieldIcon field={field} /></span>
+          <div className="profile-about-copy">
+            <small>Interests</small>
+            <strong>{currentUser.interests.map(getProfileInterestLabel).join(" · ")}</strong>
+          </div>
+          <AboutRowActions field={field} canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
+        </div>
+      );
+    }
+
+    if (field === "socialLinks") {
+      return (
+        <div className="profile-about-row" key={field}>
+          <span className="profile-about-icon"><AboutFieldIcon field={field} /></span>
+          <div className="profile-about-copy">
+            <small>Social links</small>
+            <strong className="profile-about-link-list">
+              {currentUser.socialLinks.map((link) => (
+                <a key={link} href={link} target="_blank" rel="noreferrer noopener" title={link}>
+                  <SocialLinkLogo url={link} size={16} />
+                  <span>{getSocialLinkLabel(link)}</span>
+                </a>
+              ))}
+            </strong>
+          </div>
+          <AboutRowActions field={field} canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
+        </div>
+      );
+    }
+
+    if (field === "website") {
+      return (
+        <div className="profile-about-row" key={field}>
+          <span className="profile-about-icon"><AboutFieldIcon field={field} /></span>
+          <div className="profile-about-copy">
+            <small>Website</small>
+            <strong>
+              <a className="profile-about-text-link" href={currentUser.website} target="_blank" rel="noreferrer noopener" title={currentUser.website}>
+                {currentUser.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              </a>
+            </strong>
+          </div>
+          <AboutRowActions field={field} canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
+        </div>
+      );
+    }
+
+    const privateField = field === "birthDate" || field === "email" || field === "phoneNumber";
+    let displayValue = getAboutValue(field);
+
+    if (field === "gender") displayValue = getProfileGenderLabel(currentUser.gender);
+    if (field === "category") displayValue = getProfileCategoryLabel(currentUser.category);
+    if (field === "relationshipStatus") displayValue = getRelationshipStatusLabel(currentUser.relationshipStatus);
+    if (field === "birthDate") displayValue = formatBirthDate(currentUser.birthDate);
+    if (field === "email") displayValue = aboutEmail;
+
+    return (
+      <div className={`profile-about-row${privateField ? " private-row" : ""}`} key={field}>
+        <span className="profile-about-icon"><AboutFieldIcon field={field} /></span>
+        <div className="profile-about-copy">
+          <small>{ABOUT_FIELD_LABELS[field]}{privateField ? " · only you can see this" : ""}</small>
+          <strong>{displayValue}</strong>
+        </div>
+        <AboutRowActions field={field} canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
+      </div>
+    );
+  };
+
   const completion = useMemo(() => {
     const checks = [
       Boolean(currentUser.name),
@@ -2359,10 +4528,12 @@ export default function ProfileView({
   const closeEditor = () => {
     if (saving) return;
     resetMediaDraft();
+    setMediaEditorKind(null);
     setEditing(false);
   };
 
   const openEditor = () => {
+    setMediaEditorKind(null);
     setDraft({
       name: currentUser.name,
       username: currentUser.username,
@@ -2447,6 +4618,137 @@ export default function ProfileView({
     }
   };
 
+  const openMediaEditor = (kind: "profile" | "cover") => {
+    setMediaActionKind(null);
+    openEditor();
+    setMediaEditorKind(kind);
+    if (kind === "profile") {
+      setAvatarAdjustOpen(Boolean(currentUser.image));
+      setCoverAdjustOpen(false);
+    } else {
+      setCoverAdjustOpen(Boolean(currentUser.coverImage));
+      setAvatarAdjustOpen(false);
+    }
+  };
+
+  const downloadMediaFromGallery = async (kind: "profile" | "cover") => {
+    setMediaActionKind(null);
+    const mediaUrl = kind === "profile" ? currentUser.image : currentUser.coverImage;
+    if (!mediaUrl) return;
+
+    const fallback = kind === "profile" ? "profile-photo.jpg" : "cover-photo.jpg";
+    const filename = fileNameFromMediaUrl(mediaUrl, fallback);
+
+    try {
+      const response = await fetch(mediaUrl, { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not download this photo.");
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      onShowToast("Download started");
+    } catch {
+      const anchor = document.createElement("a");
+      anchor.href = mediaUrl;
+      anchor.download = filename;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      onShowToast("Photo opened for download");
+    }
+  };
+
+  const shareMediaFromGallery = async (kind: "profile" | "cover") => {
+    setMediaActionKind(null);
+    const mediaUrl = kind === "profile" ? currentUser.image : currentUser.coverImage;
+    if (!mediaUrl) return;
+
+    const label = kind === "profile" ? "Profile photo" : "Cover photo";
+    const fallback = kind === "profile" ? "profile-photo.jpg" : "cover-photo.jpg";
+    const absoluteUrl = new URL(mediaUrl, window.location.origin).toString();
+
+    if (navigator.share) {
+      try {
+        const response = await fetch(mediaUrl, { cache: "no-store" });
+        if (response.ok) {
+          const blob = await response.blob();
+          const filename = fileNameFromMediaUrl(mediaUrl, fallback);
+          const file = new File([blob], filename, { type: blob.type || "image/jpeg" });
+          if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ title: `${currentUser.name} — ${label}`, files: [file] });
+            return;
+          }
+        }
+        await navigator.share({ title: `${currentUser.name} — ${label}`, url: absoluteUrl });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(absoluteUrl);
+      onShowToast("Photo link copied");
+    } catch {
+      onShowToast("Could not share this photo");
+    }
+  };
+
+  const deleteMediaFromGallery = async () => {
+    if (!mediaDeleteKind || mediaDeleting) return;
+
+    setMediaDeleting(true);
+    setMediaDeleteError("");
+
+    try {
+      const mediaForm = new FormData();
+      mediaForm.append(mediaDeleteKind === "profile" ? "removeProfile" : "removeCover", "1");
+
+      const response = await fetch("/api/profile/media", {
+        method: "POST",
+        body: mediaForm,
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            image?: string | null;
+            coverImage?: string | null;
+            coverPositionX?: number;
+            coverPositionY?: number;
+            coverZoom?: number;
+            error?: string;
+          }
+        | null;
+
+      if (!response.ok || !payload) {
+        throw new Error(payload?.error || "Could not delete this photo.");
+      }
+
+      const nextUser: CurrentUser = {
+        ...currentUser,
+        image: payload.image === undefined ? currentUser.image : payload.image,
+        coverImage: payload.coverImage === undefined ? currentUser.coverImage : payload.coverImage,
+        coverPositionX: payload.coverPositionX ?? currentUser.coverPositionX,
+        coverPositionY: payload.coverPositionY ?? currentUser.coverPositionY,
+        coverZoom: payload.coverZoom ?? currentUser.coverZoom,
+      };
+
+      onProfileUpdated(nextUser);
+      onShowToast(mediaDeleteKind === "profile" ? "Profile photo deleted" : "Cover photo deleted");
+      setMediaDeleteKind(null);
+    } catch (error) {
+      setMediaDeleteError(error instanceof Error ? error.message : "Could not delete this photo.");
+    } finally {
+      setMediaDeleting(false);
+    }
+  };
+
   const currentProfilePhotoAsFile = async () => {
     if (profileFile) return profileFile;
     if (!currentUser.image) return null;
@@ -2463,6 +4765,114 @@ export default function ProfileView({
       type: blob.type || "image/jpeg",
       lastModified: Date.now(),
     });
+  };
+
+  const saveFocusedMedia = async () => {
+    if (saving || !mediaEditorKind) return;
+    setSaving(true);
+    setFormError("");
+
+    try {
+      const mediaForm = new FormData();
+      let hasChanges = false;
+
+      if (mediaEditorKind === "profile") {
+        const profilePositionChanged = Boolean(
+          (profileFile || currentUser.image) && avatarAdjustmentChanged(avatarAdjustment),
+        );
+
+        if (profileFile || profilePositionChanged) {
+          const sourceProfileFile = await currentProfilePhotoAsFile();
+          if (!sourceProfileFile) throw new Error("Could not load the profile photo for adjustment.");
+
+          let profileUpload = sourceProfileFile;
+          const adjustmentPreviewUrl = profilePreview || currentUser.image || "";
+
+          if (adjustmentPreviewUrl && avatarAdjustmentChanged(avatarAdjustment)) {
+            profileUpload = await createAdjustedProfileFile(
+              sourceProfileFile,
+              adjustmentPreviewUrl,
+              avatarNaturalSize,
+              avatarAdjustment,
+            );
+          }
+
+          mediaForm.append("profile", profileUpload);
+          hasChanges = true;
+        }
+      } else {
+        const savedCoverAdjustment: CoverAdjustment = {
+          x: currentUser.coverPositionX,
+          y: currentUser.coverPositionY,
+          zoom: currentUser.coverZoom,
+        };
+        const coverPositionChanged = Boolean(
+          (coverFile || currentUser.coverImage) &&
+          coverAdjustmentChanged(
+            coverAdjustment,
+            coverFile ? DEFAULT_COVER_ADJUSTMENT : savedCoverAdjustment,
+          ),
+        );
+
+        if (coverFile) {
+          mediaForm.append("cover", coverFile);
+          hasChanges = true;
+        }
+
+        if ((coverFile || coverPositionChanged) && (coverFile || currentUser.coverImage)) {
+          mediaForm.append("coverPositionX", String(coverAdjustment.x));
+          mediaForm.append("coverPositionY", String(coverAdjustment.y));
+          mediaForm.append("coverZoom", String(coverAdjustment.zoom));
+          hasChanges = true;
+        }
+      }
+
+      if (!hasChanges) {
+        resetMediaDraft();
+        setMediaEditorKind(null);
+        setEditing(false);
+        onShowToast("No photo changes to save");
+        return;
+      }
+
+      const mediaResponse = await fetch("/api/profile/media", {
+        method: "POST",
+        body: mediaForm,
+      });
+      const mediaPayload = (await mediaResponse.json().catch(() => null)) as
+        | {
+            image?: string | null;
+            coverImage?: string | null;
+            coverPositionX?: number;
+            coverPositionY?: number;
+            coverZoom?: number;
+            error?: string;
+          }
+        | null;
+
+      if (!mediaResponse.ok || !mediaPayload) {
+        setFormError(mediaPayload?.error || "Could not update this photo.");
+        return;
+      }
+
+      const editedKind = mediaEditorKind;
+      onProfileUpdated({
+        ...currentUser,
+        image: mediaPayload.image ?? currentUser.image,
+        coverImage: mediaPayload.coverImage ?? currentUser.coverImage,
+        coverPositionX: mediaPayload.coverPositionX ?? currentUser.coverPositionX,
+        coverPositionY: mediaPayload.coverPositionY ?? currentUser.coverPositionY,
+        coverZoom: mediaPayload.coverZoom ?? currentUser.coverZoom,
+      });
+      resetMediaDraft();
+      setMediaEditorKind(null);
+      setEditing(false);
+      onShowToast(editedKind === "profile" ? "Profile photo updated" : "Cover photo updated");
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Could not update this photo. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveProfile = async () => {
@@ -2696,13 +5106,20 @@ export default function ProfileView({
         </div>
         <div className="profile-hero-body">
           <div className="profile-identity-row">
-            <UserAvatar
-              initials={currentUser.initials}
-              image={currentUser.image}
-              theme={currentUser.avatarTheme}
-              className="profile-avatar profile-avatar-xl"
-              alt={`${currentUser.name} avatar`}
-            />
+            <button
+              type="button"
+              className="profile-story-avatar-button"
+              onClick={onOpenOwnStory}
+              aria-label={hasOwnActiveStory ? "View your story" : "Add your first story"}
+            >
+              <UserAvatar
+                initials={currentUser.initials}
+                image={currentUser.image}
+                theme={currentUser.avatarTheme}
+                className="profile-avatar profile-avatar-xl"
+                alt={`${currentUser.name} avatar`}
+              />
+            </button>
             <button className="profile-edit-btn" type="button" onClick={openEditor}>
               <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4L16.5 3.5Z"/></svg>
               Edit profile
@@ -2744,22 +5161,101 @@ export default function ProfileView({
 
           <div className="profile-stats" aria-label="Profile statistics">
             <div><strong>{currentUser.postCount}</strong><span>Posts</span></div>
-            <div><strong>{completion}%</strong><span>Complete</span></div>
+            <div><strong>{currentUser.followerCount}</strong><span>Followers</span></div>
+            <div><strong>{currentUser.followingCount}</strong><span>Following</span></div>
             <div><strong>{monthYear(currentUser.joinedAt)}</strong><span>Member since</span></div>
           </div>
         </div>
       </section>
 
       <section className="profile-tabs" aria-label="Profile sections">
-        <button className={tab === "posts" ? "active" : ""} type="button" onClick={() => setTab("posts")}>Post</button>
+        <button className={tab === "overview" ? "active" : ""} type="button" onClick={() => setTab("overview")}>Overview</button>
+        <button className={tab === "posts" ? "active" : ""} type="button" onClick={() => setTab("posts")}>Posts</button>
         <button className={tab === "about" ? "active" : ""} type="button" onClick={() => setTab("about")}>About</button>
-        <button className={tab === "react" ? "active" : ""} type="button" onClick={() => setTab("react")}>React</button>
-        <button className={tab === "comment" ? "active" : ""} type="button" onClick={() => setTab("comment")}>Comment</button>
-        <button className={tab === "reply" ? "active" : ""} type="button" onClick={() => setTab("reply")}>Reply</button>
+        <button className={tab === "media" ? "active" : ""} type="button" onClick={() => setTab("media")}>Media</button>
+        <button className={tab === "activity" ? "active" : ""} type="button" onClick={() => setTab("activity")}>Activity</button>
         <span></span>
       </section>
 
-      {tab === "posts" ? (
+      {tab === "overview" ? (
+        <section className="profile-overview" aria-label="Profile overview">
+          <div className="profile-overview-grid">
+            <article className="profile-overview-card profile-overview-highlights card">
+              <header className="profile-section-heading">
+                <div>
+                  <span className="eyebrow">OVERVIEW</span>
+                  <h3>Profile highlights</h3>
+                </div>
+                <button className="profile-inline-link" type="button" onClick={() => setTab("about")}>View About</button>
+              </header>
+
+              <div className="profile-overview-details">
+                {currentUser.bio ? (
+                  <div className="profile-overview-detail">
+                    <span className="profile-overview-detail-icon"><AboutFieldIcon field="bio" /></span>
+                    <div><small>Bio</small><strong>{currentUser.bio}</strong></div>
+                  </div>
+                ) : null}
+                {currentUser.location ? (
+                  <div className="profile-overview-detail">
+                    <span className="profile-overview-detail-icon"><AboutFieldIcon field="location" /></span>
+                    <div><small>Current location</small><strong>{currentUser.location}</strong></div>
+                  </div>
+                ) : null}
+                {currentUser.workplaces?.length ? (
+                  <div className="profile-overview-detail">
+                    <span className="profile-overview-detail-icon"><AboutFieldIcon field="workplace" /></span>
+                    <div><small>Work</small><strong>{currentUser.workplaces[0]?.name}</strong></div>
+                  </div>
+                ) : null}
+                {currentUser.university || currentUser.college || currentUser.school ? (
+                  <div className="profile-overview-detail">
+                    <span className="profile-overview-detail-icon"><AboutFieldIcon field="university" /></span>
+                    <div><small>Education</small><strong>{currentUser.university || currentUser.college || currentUser.school}</strong></div>
+                  </div>
+                ) : null}
+                {!currentUser.bio && !currentUser.location && !currentUser.workplaces?.length && !currentUser.university && !currentUser.college && !currentUser.school ? (
+                  <div className="profile-overview-placeholder">
+                    <strong>Build your profile story</strong>
+                    <span>Add a bio, location, work, or education to make this overview more useful.</span>
+                    <button type="button" onClick={openEditor}>Edit profile</button>
+                  </div>
+                ) : null}
+              </div>
+            </article>
+
+          </div>
+
+          <article className="profile-overview-recent card">
+            <header className="profile-section-heading">
+              <div>
+                <span className="eyebrow">RECENT</span>
+                <h3>Latest post</h3>
+              </div>
+              {posts.length ? <button className="profile-inline-link" type="button" onClick={() => setTab("posts")}>View all posts</button> : null}
+            </header>
+            {posts[0] ? (
+              <div className="profile-recent-post-preview">
+                <div className="profile-recent-post-meta">
+                  <span>{posts[0].time}</span>
+                  <span aria-hidden="true">•</span>
+                  <span>{posts[0].visibility === "PUBLIC" ? "Public" : posts[0].visibility === "FRIENDS" ? "Friends only" : "Private"}</span>
+                </div>
+                <p>{posts[0].text}</p>
+                <div className="profile-recent-post-stats">
+                  <span>{posts[0].likeCount} reactions</span>
+                  <span>{posts[0].comments} comments</span>
+                </div>
+              </div>
+            ) : (
+              <div className="profile-overview-placeholder compact">
+                <strong>Your space is quiet.</strong>
+                <span>Your latest post will appear here after you publish it.</span>
+              </div>
+            )}
+          </article>
+        </section>
+      ) : tab === "posts" ? (
         <section className="posts profile-posts">
           {posts.length ? posts.map((post) => (
             <PostCard
@@ -2790,197 +5286,289 @@ export default function ProfileView({
           )}
         </section>
       ) : tab === "about" ? (
-        currentUser.bio ||
-        currentUser.gender ||
-        currentUser.category ||
-        currentUser.workplaces?.length ||
-        currentUser.location ||
-        currentUser.hometown ||
-        currentUser.school ||
-        currentUser.college ||
-        currentUser.university ||
-        currentUser.relationshipStatus ||
-        currentUser.interests?.length ||
-        currentUser.socialLinks?.length ||
-        currentUser.website ||
-        currentUser.birthDate ||
-        currentUser.aboutEmailVisible ||
-        currentUser.phoneNumber ? (
-          <section className="profile-about card">
-            {currentUser.bio ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="bio" /></span>
-                <div className="profile-about-copy"><small>Bio</small><strong>{currentUser.bio}</strong></div>
-                <AboutRowActions field="bio" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.gender ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="gender" /></span>
-                <div className="profile-about-copy"><small>Gender</small><strong>{getProfileGenderLabel(currentUser.gender)}</strong></div>
-                <AboutRowActions field="gender" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.category ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="category" /></span>
-                <div className="profile-about-copy"><small>Category</small><strong>{getProfileCategoryLabel(currentUser.category)}</strong></div>
-                <AboutRowActions field="category" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.workplaces?.length ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="workplace" /></span>
-                <div className="profile-about-copy">
-                  <small>Workplace</small>
-                  <strong style={{ display: "flex", flexWrap: "wrap", gap: "5px 12px", marginTop: 2 }}>
-                    {currentUser.workplaces.map((workplace, index) => workplace.url ? (
-                      <a
-                        key={`${workplace.name}|${workplace.url}|${index}`}
-                        href={workplace.url}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        title={workplace.url}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "inherit", textDecoration: "none", font: "inherit", lineHeight: "inherit" }}
-                      >
-                        <SocialLinkLogo url={workplace.url} size={16} />
-                        <span>{workplace.name || getSocialLinkLabel(workplace.url)}</span>
-                      </a>
-                    ) : (
-                      <span key={`${workplace.name}|${index}`}>{workplace.name}</span>
-                    ))}
-                  </strong>
-                </div>
-                <AboutRowActions field="workplace" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.location ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="location" /></span>
-                <div className="profile-about-copy"><small>Current location</small><strong>{currentUser.location}</strong></div>
-                <AboutRowActions field="location" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.hometown ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="hometown" /></span>
-                <div className="profile-about-copy"><small>Hometown</small><strong>{currentUser.hometown}</strong></div>
-                <AboutRowActions field="hometown" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.school ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="school" /></span>
-                <div className="profile-about-copy"><small>School</small><strong>{currentUser.school}</strong></div>
-                <AboutRowActions field="school" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.college ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="college" /></span>
-                <div className="profile-about-copy"><small>College</small><strong>{currentUser.college}</strong></div>
-                <AboutRowActions field="college" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.university ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="university" /></span>
-                <div className="profile-about-copy"><small>University</small><strong>{currentUser.university}</strong></div>
-                <AboutRowActions field="university" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.relationshipStatus ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="relationshipStatus" /></span>
-                <div className="profile-about-copy"><small>Relationship status</small><strong>{getRelationshipStatusLabel(currentUser.relationshipStatus)}</strong></div>
-                <AboutRowActions field="relationshipStatus" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.interests?.length ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="interests" /></span>
-                <div className="profile-about-copy">
-                  <small>Interests</small>
-                  <strong>{currentUser.interests.map(getProfileInterestLabel).join(" · ")}</strong>
-                </div>
-                <AboutRowActions field="interests" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.socialLinks?.length ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="socialLinks" /></span>
-                <div className="profile-about-copy">
-                  <small>Social links</small>
-                  <strong style={{ display: "flex", flexWrap: "wrap", gap: "5px 12px", marginTop: 2 }}>
-                    {currentUser.socialLinks.map((link) => (
-                      <a
-                        key={link}
-                        href={link}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        title={link}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "inherit", textDecoration: "none", font: "inherit", lineHeight: "inherit" }}
-                      >
-                        <SocialLinkLogo url={link} size={16} />
-                        <span>{getSocialLinkLabel(link)}</span>
-                      </a>
-                    ))}
-                  </strong>
-                </div>
-                <AboutRowActions field="socialLinks" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.website ? (
-              <div className="profile-about-row">
-                <span className="profile-about-icon"><AboutFieldIcon field="website" /></span>
-                <div className="profile-about-copy">
-                  <small>Website</small>
-                  <strong>
-                    <a
-                      href={currentUser.website}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      title={currentUser.website}
-                      style={{ color: "inherit", textDecoration: "none", font: "inherit", lineHeight: "inherit" }}
-                    >
-                      {currentUser.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                    </a>
-                  </strong>
-                </div>
-                <AboutRowActions field="website" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.birthDate ? (
-              <div className="profile-about-row private-row">
-                <span className="profile-about-icon" style={{ color: "var(--primary)", background: "var(--primary-soft)" }}><AboutFieldIcon field="birthDate" /></span>
-                <div className="profile-about-copy"><small>Birth date · only you can see this</small><strong>{formatBirthDate(currentUser.birthDate)}</strong></div>
-                <AboutRowActions field="birthDate" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.aboutEmailVisible && aboutEmail ? (
-              <div className="profile-about-row private-row">
-                <span className="profile-about-icon" style={{ color: "var(--primary)", background: "var(--primary-soft)" }}><AboutFieldIcon field="email" /></span>
-                <div className="profile-about-copy"><small>Email · only you can see this</small><strong>{aboutEmail}</strong></div>
-                <AboutRowActions field="email" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
-            {currentUser.phoneNumber ? (
-              <div className="profile-about-row private-row">
-                <span className="profile-about-icon" style={{ color: "var(--primary)", background: "var(--primary-soft)" }}><AboutFieldIcon field="phoneNumber" /></span>
-                <div className="profile-about-copy"><small>Phone number · only you can see this</small><strong>{currentUser.phoneNumber}</strong></div>
-                <AboutRowActions field="phoneNumber" canDelete onEdit={openAboutEditor} onDelete={openAboutDelete} />
-              </div>
-            ) : null}
+        ABOUT_GROUPS.some((group) => group.fields.some(hasAboutValue)) ? (
+          <section className="profile-about-groups" aria-label="About information">
+            {ABOUT_GROUPS.map((group) => {
+              const visibleFields = group.fields.filter(hasAboutValue);
+              if (!visibleFields.length) return null;
+
+              return (
+                <article className="profile-about-group card" key={group.id}>
+                  <header className="profile-about-group-header">
+                    <span className="profile-about-group-icon"><AboutGroupIcon group={group.id} /></span>
+                    <div>
+                      <h3>{group.title}</h3>
+                      <p>{group.description}</p>
+                    </div>
+                  </header>
+                  <div className="profile-about-group-rows">
+                    {visibleFields.map((field) => renderAboutField(field))}
+                  </div>
+                </article>
+              );
+            })}
           </section>
-        ) : null
+        ) : (
+          <div className="profile-empty card">
+            <div className="profile-empty-sad" aria-hidden="true">
+              <svg viewBox="0 0 48 48" role="presentation">
+                <circle className="profile-empty-sad-face" cx="24" cy="24" r="16.5" />
+                <ellipse className="profile-empty-sad-eye" cx="18.5" cy="21" rx="1.8" ry="2.4" />
+                <ellipse className="profile-empty-sad-eye" cx="29.5" cy="21" rx="1.8" ry="2.4" />
+                <path className="profile-empty-sad-mouth" d="M17.5 31c1.8-3 4-4.4 6.5-4.4s4.7 1.4 6.5 4.4" />
+              </svg>
+            </div>
+            <h3>No About details yet</h3>
+            <p>Add profile details to help people understand who you are.</p>
+          </div>
+        )
+      ) : tab === "media" ? (
+        <section className="profile-media-section" aria-label="Profile media">
+          <div className="profile-media-heading">
+            <div>
+              <span className="eyebrow">MEDIA</span>
+              <h3>Photos</h3>
+              <p>Media already attached to your Gupto profile appears here.</p>
+            </div>
+          </div>
+
+          {currentUser.image || currentUser.coverImage ? (
+            <div className="profile-media-grid">
+              {currentUser.image ? (
+                <article className="profile-media-item card profile-media-item-square">
+                  <div className="profile-media-image-wrap">
+                    <img src={currentUser.image} alt={`${currentUser.name} profile`} />
+                  </div>
+                  <div className="profile-media-action-shell" data-media-action-shell="true">
+                    <button
+                      className="profile-media-action-trigger"
+                      type="button"
+                      aria-label="Photo actions"
+                      title="Photo actions"
+                      aria-expanded={mediaActionKind === "profile"}
+                      onClick={() => setMediaActionKind((current) => current === "profile" ? null : "profile")}
+                    >
+                      <FontAwesomeEditIcon />
+                    </button>
+                    {mediaActionKind === "profile" ? (
+                      <div className="profile-media-action-menu" role="menu" aria-label="Profile photo actions">
+                        <button type="button" role="menuitem" onClick={() => openMediaEditor("profile")}><span><FontAwesomeEditIcon /></span>Edit Photo</button>
+                        <button className="danger" type="button" role="menuitem" onClick={() => { setMediaActionKind(null); setMediaDeleteError(""); setMediaDeleteKind("profile"); }}><span><FontAwesomeDeleteIcon /></span>Delete Photo</button>
+                        <button type="button" role="menuitem" onClick={() => void downloadMediaFromGallery("profile")}><span><FontAwesomeDownloadIcon /></span>Download</button>
+                        <button type="button" role="menuitem" onClick={() => void shareMediaFromGallery("profile")}><span><FontAwesomeShareIcon /></span>Share</button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="profile-media-caption"><strong>Profile photo</strong><span>Current profile image</span></div>
+                </article>
+              ) : null}
+              {currentUser.coverImage ? (
+                <article className="profile-media-item card profile-media-item-cover">
+                  <div className="profile-media-image-wrap">
+                    <img
+                      src={currentUser.coverImage}
+                      alt={`${currentUser.name} cover`}
+                    />
+                  </div>
+                  <div className="profile-media-action-shell" data-media-action-shell="true">
+                    <button
+                      className="profile-media-action-trigger"
+                      type="button"
+                      aria-label="Photo actions"
+                      title="Photo actions"
+                      aria-expanded={mediaActionKind === "cover"}
+                      onClick={() => setMediaActionKind((current) => current === "cover" ? null : "cover")}
+                    >
+                      <FontAwesomeEditIcon />
+                    </button>
+                    {mediaActionKind === "cover" ? (
+                      <div className="profile-media-action-menu" role="menu" aria-label="Cover photo actions">
+                        <button type="button" role="menuitem" onClick={() => openMediaEditor("cover")}><span><FontAwesomeEditIcon /></span>Edit Photo</button>
+                        <button className="danger" type="button" role="menuitem" onClick={() => { setMediaActionKind(null); setMediaDeleteError(""); setMediaDeleteKind("cover"); }}><span><FontAwesomeDeleteIcon /></span>Delete Photo</button>
+                        <button type="button" role="menuitem" onClick={() => void downloadMediaFromGallery("cover")}><span><FontAwesomeDownloadIcon /></span>Download</button>
+                        <button type="button" role="menuitem" onClick={() => void shareMediaFromGallery("cover")}><span><FontAwesomeShareIcon /></span>Share</button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="profile-media-caption"><strong>Cover photo</strong><span>Current profile banner</span></div>
+                </article>
+              ) : null}
+            </div>
+          ) : (
+            <div className="profile-empty card">
+              <div className="profile-empty-sad" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="presentation">
+                  <circle className="profile-empty-sad-face" cx="24" cy="24" r="16.5" />
+                  <ellipse className="profile-empty-sad-eye" cx="18.5" cy="21" rx="1.8" ry="2.4" />
+                  <ellipse className="profile-empty-sad-eye" cx="29.5" cy="21" rx="1.8" ry="2.4" />
+                  <path className="profile-empty-sad-mouth" d="M17.5 31c1.8-3 4-4.4 6.5-4.4s4.7 1.4 6.5 4.4" />
+                </svg>
+              </div>
+              <h3>No media yet</h3>
+              <p>Your profile and cover photos will appear here when you add them.</p>
+            </div>
+          )}
+        </section>
       ) : (
-        <ProfileActivityPanel
-          tab={tab as ProfileActivityTab}
-          items={activityItems[tab as ProfileActivityTab] || []}
-          loading={activityLoading}
-          error={activityError}
-        />
+        <section className="profile-activity-shell" aria-label="Profile activity">
+          <div className="profile-activity-board card">
+            <header className="profile-activity-header">
+              <div className="profile-activity-heading">
+                <span className="eyebrow">ACTIVITY</span>
+                <h3>Your activity</h3>
+              </div>
+              <div className="profile-activity-filter-wrap">
+                <div className="profile-activity-filters" role="tablist" aria-label="Activity filters">
+                  {(["all", "react", "comment", "reply"] as ProfileActivityFilter[]).map((filter) => (
+                    <button
+                      key={filter}
+                      type="button"
+                      role="tab"
+                      aria-selected={activityFilter === filter}
+                      className={`${activityFilter === filter ? "active" : ""} ${filter}`}
+                      onClick={() => setActivityFilter(filter)}
+                    >
+                      <span className="profile-activity-filter-icon"><ActivityFilterIcon filter={filter} /></span>
+                      <span>{filter === "all" ? "All" : filter === "react" ? "Reactions" : filter === "comment" ? "Comments" : "Replies"}</span>
+                      <small>{activityCounts[filter]}</small>
+                    </button>
+                  ))}
+                </div>
+                <div className="profile-activity-manage-shell" ref={activityManageRef}>
+                  <button
+                    className={`profile-activity-manage-trigger${activityManageOpen || activitySelectionMode || activityDateRange ? " active" : ""}`}
+                    type="button"
+                    aria-label="Manage activity"
+                    title="Manage activity"
+                    aria-haspopup="menu"
+                    aria-expanded={activityManageOpen}
+                    onClick={() => {
+                      setActivityManageError("");
+                      if (!activityManageOpen) setActivityManageInitialView("root");
+                      setActivityManageOpen((current) => !current);
+                    }}
+                  >
+                    <ActivityManagementIcon type="manage" />
+                  </button>
+                  {activityManageOpen ? (
+                    <ActivityManageMenu
+                      counts={activityCounts}
+                      busy={activityManageBusy}
+                      initialView={activityManageInitialView}
+                      initialCalendarMode={activityDateReturnPicker.mode}
+                      initialCalendarValue={activityDateReturnPicker.value}
+                      onStartSelection={startActivitySelection}
+                      onStartTypeSelection={startActivityTypeSelection}
+                      onRequestRangeDelete={(range) => requestActivityDelete({
+                        title: `Delete activity from ${range.label}?`,
+                        copy: "Reactions, comments and replies created in this time range will be removed. Activity outside this range stays untouched.",
+                        successMessage: `Activity from ${range.label} deleted`,
+                        payload: { mode: "range", from: range.from, to: range.to },
+                      })}
+                      onRequestDeleteAll={() => requestActivityDelete({
+                        title: "Delete all activities?",
+                        copy: "This removes your reactions, comments and replies from your complete Activity history. This action cannot be undone.",
+                        successMessage: "All activities deleted",
+                        payload: { mode: "all" },
+                      })}
+                      onApplyCalendar={applyActivityDateRange}
+                      onCalendarBack={clearActivityDateRange}
+                      onRequestCalendarDelete={(range) => requestActivityDelete({
+                        title: `Delete all activity from ${range.label}?`,
+                        copy: "Only activity inside this calendar period will be removed. Activity outside the selected period stays untouched.",
+                        successMessage: `Activity from ${range.label} deleted`,
+                        payload: { mode: "range", from: range.from, to: range.to },
+                      })}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            </header>
+            {activityDateRange || activitySelectionMode ? (
+              <div className="profile-activity-management-status" aria-label="Activity management status">
+                {activityDateRange ? (
+                  <div className="profile-activity-range-chip">
+                    <ActivityManagementIcon type="calendar" />
+                    <span>Showing <strong>{activityDateRange.label}</strong></span>
+                    <button type="button" aria-label="Clear date filter" title="Clear date filter" onClick={clearActivityDateRange}>×</button>
+                  </div>
+                ) : <span />}
+                {activitySelectionMode ? (
+                  <div className="profile-activity-selection-actions">
+                    <span className={`profile-activity-selection-count${selectedActivityDeleteItems.length > 0 ? " has-selection" : ""}`}><strong>{selectedActivityDeleteItems.length}</strong> selected</span>
+                    <button
+                      className="profile-activity-selection-action select-all"
+                      type="button"
+                      aria-pressed={allVisibleActivitySelected}
+                      disabled={activityManageBusy || selectedActivityItems.length === 0}
+                      onClick={toggleAllVisibleActivity}
+                    >
+                      <span className="profile-activity-selection-action-icon circle" aria-hidden="true"><ActivitySelectionCircleIcon checked={allVisibleActivitySelected} className="profile-activity-select-all-icon" /></span>
+                      <span>Select all</span>
+                    </button>
+                    <button
+                      className="profile-activity-selection-action danger"
+                      type="button"
+                      disabled={activityManageBusy || selectedActivityDeleteItems.length === 0}
+                      onClick={requestSelectedActivityDelete}
+                    >
+                      <span className="profile-activity-selection-action-icon trash" aria-hidden="true"><FontAwesomeDeleteIcon /></span>
+                      <span>Delete selected</span>
+                    </button>
+                    <button className="profile-activity-selection-action cancel" type="button" disabled={activityManageBusy} onClick={cancelActivitySelection}>Cancel</button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            <div
+              key={activityContentEpoch}
+              className={`profile-activity-content-stage${activityLoading ? " is-loading" : ""}`}
+              aria-live="polite"
+            >
+              <ProfileActivityPanel
+                filter={activityFilter}
+                items={selectedActivityItems}
+                loading={activityLoading}
+                error={activityError}
+                currentUsername={currentUser.username}
+                onReactionUpdated={updateActivityReaction}
+                onReactionDeleted={deleteActivityReaction}
+                onCommentUpdated={updateActivityComment}
+                onCommentDeleted={deleteActivityComment}
+                onReplyUpdated={updateActivityReply}
+                onReplyDeleted={deleteActivityReply}
+                onShowToast={onShowToast}
+                selectionMode={activitySelectionMode}
+                selectedKeys={activitySelectedKeys}
+                onToggleSelection={toggleActivitySelection}
+              />
+            </div>
+          </div>
+        </section>
       )}
+
+      {activityDeleteConfirmation ? (
+        <div className="profile-modal-backdrop about-field-backdrop profile-activity-manage-delete-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !activityManageBusy) {
+            setActivityDeleteConfirmation(null);
+            setActivityManageError("");
+          }
+        }}>
+          <section className="profile-modal about-delete-modal profile-activity-manage-delete-modal card" role="dialog" aria-modal="true" aria-labelledby="activity-manage-delete-title">
+            <div className="about-delete-symbol profile-activity-manage-delete-symbol" aria-hidden="true"><ActivityManagementIcon type="trash" /></div>
+            <div className="about-delete-copy">
+              <span className="eyebrow">ACTIVITY MANAGEMENT</span>
+              <h2 id="activity-manage-delete-title">{activityDeleteConfirmation.title}</h2>
+              <p>{activityDeleteConfirmation.copy}</p>
+            </div>
+            {activityManageError ? <p className="profile-form-error" role="alert">{activityManageError}</p> : null}
+            <footer className="profile-modal-footer">
+              <button className="profile-cancel-btn" type="button" disabled={activityManageBusy} onClick={() => { setActivityDeleteConfirmation(null); setActivityManageError(""); }}>Cancel</button>
+              <button className="about-delete-confirm" type="button" disabled={activityManageBusy} onClick={() => void performActivityManagementDelete()}>{activityManageBusy ? "Deleting…" : "Delete"}</button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
 
       {aboutField ? (
         <div className="profile-modal-backdrop about-field-backdrop" role="presentation" onMouseDown={(event) => {
@@ -3153,17 +5741,67 @@ export default function ProfileView({
         </div>
       ) : null}
 
+      {mediaDeleteKind ? (
+        <div className="profile-modal-backdrop about-field-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !mediaDeleting) {
+            setMediaDeleteKind(null);
+            setMediaDeleteError("");
+          }
+        }}>
+          <section className="profile-modal about-delete-modal card" role="dialog" aria-modal="true" aria-labelledby="media-delete-title">
+            <div className="about-delete-symbol" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
+            </div>
+            <div className="about-delete-copy">
+              <span className="eyebrow">REMOVE FROM MEDIA</span>
+              <h2 id="media-delete-title">Delete {mediaDeleteKind === "profile" ? "profile photo" : "cover photo"}?</h2>
+              <p>
+                This will remove the current {mediaDeleteKind === "profile" ? "profile photo" : "cover photo"} from your Gupto profile and delete its stored file.
+              </p>
+            </div>
+            {mediaDeleteError ? <p className="profile-form-error" role="alert">{mediaDeleteError}</p> : null}
+            <footer className="profile-modal-footer">
+              <button
+                className="profile-cancel-btn"
+                type="button"
+                disabled={mediaDeleting}
+                onClick={() => {
+                  setMediaDeleteKind(null);
+                  setMediaDeleteError("");
+                }}
+              >
+                Cancel
+              </button>
+              <button className="about-delete-confirm" type="button" disabled={mediaDeleting} onClick={deleteMediaFromGallery}>
+                {mediaDeleting ? "Deleting…" : "Delete"}
+              </button>
+            </footer>
+          </section>
+        </div>
+      ) : null}
+
       {editing ? (
         <div className="profile-modal-backdrop" role="presentation" onMouseDown={(event) => {
           if (event.target === event.currentTarget) closeEditor();
         }}>
-          <section className="profile-modal card" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title">
+          <section className={`profile-modal card${mediaEditorKind ? " profile-modal-media-only" : ""}`} role="dialog" aria-modal="true" aria-labelledby="edit-profile-title">
             <header className="profile-modal-header">
-              <div><span className="eyebrow">PROFILE</span><h2 id="edit-profile-title">Edit your profile</h2></div>
+              <div>
+                <span className="eyebrow">{mediaEditorKind ? "MEDIA" : "PROFILE"}</span>
+                <h2 id="edit-profile-title">
+                  {mediaEditorKind === "profile"
+                    ? "Edit profile photo"
+                    : mediaEditorKind === "cover"
+                      ? "Edit cover photo"
+                      : "Edit your profile"}
+                </h2>
+                {mediaEditorKind ? <small className="profile-media-only-note">Only this photo will be updated.</small> : null}
+              </div>
               <button className="profile-modal-close" type="button" aria-label="Close" onClick={closeEditor}>×</button>
             </header>
 
-            <div className="profile-media-editor">
+            <div className={`profile-media-editor${mediaEditorKind ? " is-focused" : ""}`}>
+              {(!mediaEditorKind || mediaEditorKind === "cover") ? (
               <section className="profile-media-card profile-media-cover-card">
                 <div className={`profile-media-cover-preview${coverDisplayUrl ? " has-photo" : ""}`}>
                   {coverDisplayUrl ? (
@@ -3188,7 +5826,7 @@ export default function ProfileView({
                 <div className="profile-media-copy">
                   <div><strong>Cover photo</strong><small>{coverDisplayUrl ? "Saved in the same quality you upload." : "Recommended cover: 1500 × 500 px (3:1). Exact fit on all devices at 100% / Reset."}</small></div>
                   <div className="profile-media-buttons">
-                    <button type="button" onClick={() => coverInputRef.current?.click()}>Choose photo</button>
+                    <button type="button" onClick={() => coverInputRef.current?.click()}>{mediaEditorKind === "cover" ? "Change photo" : "Choose photo"}</button>
                     {coverIsAdjustable ? (
                       <button
                         className="muted profile-media-icon-button"
@@ -3204,7 +5842,7 @@ export default function ProfileView({
                         <FontAwesomeEditIcon />
                       </button>
                     ) : null}
-                    {(coverFile || currentUser.coverImage) ? (
+                    {!mediaEditorKind && (coverFile || currentUser.coverImage) ? (
                       <button
                         className="muted profile-media-icon-button"
                         type="button"
@@ -3227,7 +5865,9 @@ export default function ProfileView({
                   }}
                 />
               </section>
+              ) : null}
 
+              {(!mediaEditorKind || mediaEditorKind === "profile") ? (
               <section className="profile-media-card profile-media-avatar-card">
                 <div className="profile-media-avatar-preview">
                   {profileDisplayUrl ? (
@@ -3244,7 +5884,7 @@ export default function ProfileView({
                 <div className="profile-media-copy">
                   <div><strong>Profile photo</strong><small>Saved in the same quality you upload.</small></div>
                   <div className="profile-media-buttons">
-                    <button type="button" onClick={() => profileInputRef.current?.click()}>Choose photo</button>
+                    <button type="button" onClick={() => profileInputRef.current?.click()}>{mediaEditorKind === "profile" ? "Change photo" : "Choose photo"}</button>
                     {profileIsAdjustable ? (
                       <button
                         className="muted profile-media-icon-button"
@@ -3260,7 +5900,7 @@ export default function ProfileView({
                         <FontAwesomeEditIcon />
                       </button>
                     ) : null}
-                    {(profileFile || currentUser.image) ? (
+                    {!mediaEditorKind && (profileFile || currentUser.image) ? (
                       <button
                         className="muted profile-media-icon-button"
                         type="button"
@@ -3283,9 +5923,10 @@ export default function ProfileView({
                   }}
                 />
               </section>
+              ) : null}
             </div>
 
-            {coverIsAdjustable && coverAdjustOpen ? (
+            {(!mediaEditorKind || mediaEditorKind === "cover") && coverIsAdjustable && coverAdjustOpen ? (
               <section className="profile-cover-adjust-panel" aria-label="Adjust cover photo">
                 <div className="profile-cover-adjust-stage-wrap">
                   <div
@@ -3389,7 +6030,7 @@ export default function ProfileView({
               </section>
             ) : null}
 
-            {profileIsAdjustable && avatarAdjustOpen ? (
+            {(!mediaEditorKind || mediaEditorKind === "profile") && profileIsAdjustable && avatarAdjustOpen ? (
               <section className="profile-avatar-adjust-panel" aria-label="Adjust profile photo">
                 <div className="profile-avatar-adjust-stage-wrap">
                   <div
@@ -3499,6 +6140,7 @@ export default function ProfileView({
               </section>
             ) : null}
 
+            {!mediaEditorKind ? (
             <div className="profile-form-grid">
               <label className="profile-field">
                 <span>Name</span>
@@ -3620,12 +6262,20 @@ export default function ProfileView({
                 <input maxLength={200} value={draft.website} onChange={(event) => setDraft((current) => ({ ...current, website: event.target.value }))} placeholder="yourwebsite.com" />
               </label>
             </div>
+            ) : null}
 
             {formError ? <p className="profile-form-error" role="alert">{formError}</p> : null}
 
             <footer className="profile-modal-footer">
               <button className="profile-cancel-btn" type="button" disabled={saving} onClick={closeEditor}>Cancel</button>
-              <button className="profile-save-btn" type="button" disabled={saving} onClick={saveProfile}>{saving ? "Saving…" : "Save profile"}</button>
+              <button
+                className="profile-save-btn"
+                type="button"
+                disabled={saving}
+                onClick={mediaEditorKind ? saveFocusedMedia : saveProfile}
+              >
+                {saving ? "Saving…" : mediaEditorKind ? "Save photo" : "Save profile"}
+              </button>
             </footer>
           </section>
         </div>

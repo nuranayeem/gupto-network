@@ -169,7 +169,7 @@ export default async function HomePage({
       birthDate: true,
       category: true,
       createdAt: true,
-      _count: { select: { posts: true } },
+      _count: { select: { posts: true, followers: true, following: true } },
     },
   });
 
@@ -242,6 +242,8 @@ export default async function HomePage({
         category: dbUser.category || "",
         joinedAt: dbUser.createdAt.toISOString(),
         postCount: dbUser._count.posts,
+        followerCount: dbUser._count.followers,
+        followingCount: dbUser._count.following,
       }}
       initialPosts={feedPosts.map((post) => mapPost(post, dbUser.id))}
       initialProfilePosts={dbProfilePosts.map((post) => mapPost(post, dbUser.id))}

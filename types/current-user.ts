@@ -35,4 +35,6 @@ export type CurrentUser = {
   category: string;
   joinedAt: string;
   postCount: number;
+  followerCount: number;
+  followingCount: number;
 };

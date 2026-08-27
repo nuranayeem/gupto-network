@@ -117,7 +117,7 @@ const userSelect = {
   birthDate: true,
   category: true,
   createdAt: true,
-  _count: { select: { posts: true } },
+  _count: { select: { posts: true, followers: true, following: true } },
 } as const;
 
 function toCurrentUser(user: {
@@ -148,7 +148,7 @@ function toCurrentUser(user: {
   birthDate: Date | null;
   category: string | null;
   createdAt: Date;
-  _count: { posts: number };
+  _count: { posts: number; followers: number; following: number };
 }) {
   const name = user.name || user.username || user.email.split("@")[0] || "User";
   const username = user.username || user.email.split("@")[0] || "user";
@@ -183,6 +183,8 @@ function toCurrentUser(user: {
     category: user.category || "",
     joinedAt: user.createdAt.toISOString(),
     postCount: user._count.posts,
+    followerCount: user._count.followers,
+    followingCount: user._count.following,
   };
 }
 

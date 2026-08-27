@@ -167,14 +167,44 @@ function ShareUtilityIcon({ type }: { type: "link" | "copy" | "more" }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="m8 11 8-4M8 13l8 4"/></svg>;
 }
 
-function VisibilityIcon({ visibility }: { visibility: PostVisibility }) {
+function FontAwesomePostVisibilityIcon({ visibility }: { visibility: PostVisibility }) {
   if (visibility === "PRIVATE") {
-    return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>;
+    return (
+      <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+        <path d="M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z" />
+      </svg>
+    );
   }
+
   if (visibility === "FRIENDS") {
-    return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20c0-4 2.5-7 6-7s6 3 6 7M14 15c3.5-.7 6 1.5 6 5"/></svg>;
+    return (
+      <svg viewBox="0 0 640 512" aria-hidden="true" focusable="false">
+        <path d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM609.3 512l-137.8 0c5.4-9.4 8.6-20.3 8.6-32l0-8c0-60.7-27.1-115.2-69.8-151.8c2.4-.1 4.7-.2 7.1-.2l61.4 0C567.8 320 640 392.2 640 481.3c0 17-13.8 30.7-30.7 30.7zM432 256c-31 0-59-12.6-79.3-32.9C372.4 196.5 384 163.6 384 128c0-26.8-6.6-52.1-18.3-74.3C384.3 40.1 407.2 32 432 32c61.9 0 112 50.1 112 112s-50.1 112-112 112z" />
+      </svg>
+    );
   }
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>;
+
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+      <path d="M352 256c0 22.2-1.2 43.6-3.3 64l-185.3 0c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64l185.3 0c2.2 20.4 3.3 41.8 3.3 64zm28.8-64l123.1 0c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64l-123.1 0c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64zm112.6-32l-116.7 0c-10-63.9-29.8-117.4-55.3-151.6c78.3 20.7 142 77.5 171.9 151.6zm-149.1 0l-176.6 0c6.1-36.4 15.5-68.6 27-94.7c10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5c11.6 26 20.9 58.2 27 94.7zm-209 0L18.6 160C48.6 85.9 112.2 29.1 190.6 8.4C165.1 42.6 145.3 96.1 135.3 160zM8.1 192l123.1 0c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64L8.1 320C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64zM194.7 446.6c-11.6-26-20.9-58.2-27-94.6l176.6 0c-6.1 36.4-15.5 68.6-27 94.6c-10.5 23.6-22.2 40.7-33.5 51.5C272.6 508.8 263.3 512 256 512s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6C112.2 482.9 48.6 426.1 18.6 352l116.7 0zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6c25.5-34.2 45.2-87.7 55.3-151.6l116.7 0z" />
+    </svg>
+  );
+}
+
+function FontAwesomePostEditIcon() {
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">
+      <path d="M490.3 40.4C512.2 62.27 512.2 97.73 490.3 119.6L460.3 149.7L362.3 51.72L392.4 21.66C414.3-.2135 449.7-.2135 471.6 21.66L490.3 40.4zM172.4 241.7L339.7 74.34L437.7 172.3L270.3 339.6C264.2 345.8 256.7 350.4 248.4 353.2L159.6 382.8C150.1 385.6 141.5 383.4 135 376.1C128.6 370.5 126.4 361 129.2 352.4L158.8 263.6C161.6 255.3 166.2 247.8 172.4 241.7V241.7zM192 63.1C209.7 63.1 224 78.33 224 95.1C224 113.7 209.7 127.1 192 127.1H96C78.33 127.1 64 142.3 64 159.1V416C64 433.7 78.33 448 96 448H352C369.7 448 384 433.7 384 416V319.1C384 302.3 398.3 287.1 416 287.1C433.7 287.1 448 302.3 448 319.1V416C448 469 405 512 352 512H96C42.98 512 0 469 0 416V159.1C0 106.1 42.98 63.1 96 63.1H192z" />
+    </svg>
+  );
+}
+
+function FontAwesomePostDeleteIcon() {
+  return (
+    <svg viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+      <path d="M135.2 17.69C140.6 6.848 151.7 0 163.8 0H284.2C296.3 0 307.4 6.848 312.8 17.69L320 32H416C433.7 32 448 46.33 448 64C448 81.67 433.7 96 416 96H32C14.33 96 0 81.67 0 64C0 46.33 14.33 32 32 32H128L135.2 17.69zM31.1 128H416V448C416 483.3 387.3 512 352 512H95.1C60.65 512 31.1 483.3 31.1 448V128zM111.1 208V432C111.1 440.8 119.2 448 127.1 448C136.8 448 143.1 440.8 143.1 432V208C143.1 199.2 136.8 192 127.1 192C119.2 192 111.1 199.2 111.1 208zM207.1 208V432C207.1 440.8 215.2 448 223.1 448C232.8 448 240 440.8 240 432V208C240 199.2 232.8 192 223.1 192C215.2 192 207.1 199.2 207.1 208zM304 208V432C304 440.8 311.2 448 320 448C328.8 448 336 440.8 336 432V208C336 199.2 328.8 192 320 192C311.2 192 304 199.2 304 208z" />
+    </svg>
+  );
 }
 
 const visibilityOptions: { value: PostVisibility; label: string; helper: string }[] = [
@@ -1255,30 +1285,30 @@ export default function PostCard({
             </div>
             <small className="post-meta-line">
               {post.handle} · {post.time}{post.wasEdited ? " · edited" : ""}
-              {post.isOwn ? <span className="post-visibility-mini" title={visibilityOptions.find((item) => item.value === post.visibility)?.label}><VisibilityIcon visibility={post.visibility} /></span> : null}
+              {post.isOwn ? <span className="post-visibility-mini" title={visibilityOptions.find((item) => item.value === post.visibility)?.label}><FontAwesomePostVisibilityIcon visibility={post.visibility} /></span> : null}
             </small>
           </div>
         </div>
         <div className="post-menu-wrap" ref={menuRef}>
           <button className="ghost-btn" type="button" aria-label={post.isOwn ? "Manage post" : "Post menu"} aria-expanded={post.isOwn ? menuOpen : undefined} onClick={togglePostMenu}>•••</button>
           {menuOpen && post.isOwn ? (
-            <div className={`post-menu card mobile-${mobileMenuLayout}-post-menu`} role="menu">
+            <div className={`post-menu mobile-${mobileMenuLayout}-post-menu`} role="menu">
               <>
                   <button type="button" role="menuitem" onClick={() => { setEditing(true); setMenuOpen(false); }}>
-                    <span>✎</span><div><strong>Edit post</strong><small>Update your post text</small></div>
+                    <span><FontAwesomePostEditIcon /></span><div><strong>Edit post</strong><small>Update your post text</small></div>
                   </button>
                   <div className="post-menu-divider"></div>
                   <div className="post-menu-label">Who can see this post?</div>
                   {visibilityOptions.map((option) => (
                     <button key={option.value} type="button" role="menuitemradio" aria-checked={post.visibility === option.value} className={post.visibility === option.value ? "selected" : ""} onClick={() => void changeVisibility(option.value)}>
-                      <span className="post-menu-visibility-icon"><VisibilityIcon visibility={option.value} /></span>
+                      <span className="post-menu-visibility-icon"><FontAwesomePostVisibilityIcon visibility={option.value} /></span>
                       <div><strong>{option.label}</strong><small>{option.helper}</small></div>
                       {post.visibility === option.value ? <b>✓</b> : null}
                     </button>
                   ))}
                   <div className="post-menu-divider"></div>
                   <button className="danger" type="button" role="menuitem" onClick={() => void deletePost()}>
-                    <span>⌫</span><div><strong>Delete post</strong><small>This cannot be undone</small></div>
+                    <span><FontAwesomePostDeleteIcon /></span><div><strong>Delete post</strong><small>This cannot be undone</small></div>
                   </button>
               </>
             </div>
@@ -1407,7 +1437,7 @@ export default function PostCard({
               </div>
 
               <div className="post-share-privacy">
-                <VisibilityIcon visibility={post.visibility} />
+                <FontAwesomePostVisibilityIcon visibility={post.visibility} />
                 <span>{post.visibility === "PUBLIC" ? "Anyone with the link can open this public post." : post.visibility === "FRIENDS" ? "Only accepted friends can open this post on Gupto." : "This private post can only be opened by you."}</span>
               </div>
             </div>

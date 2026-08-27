@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { canViewPost } from "@/lib/post-access";
 
-const patchSchema = z.object({ text: z.string().trim().min(1).max(500) });
+const patchSchema = z.object({ text: z.string().trim().min(1).max(500), markEdited: z.boolean().optional() });
 
 async function getViewer() {
   const session = await auth();
@@ -31,7 +31,10 @@ export async function PATCH(
 
   const comment = await prisma.postComment.update({
     where: { id: commentId },
-    data: { text: parsed.data.text, editedAt: new Date() },
+    data: {
+      text: parsed.data.text,
+      editedAt: parsed.data.markEdited === false ? null : new Date(),
+    },
     select: { id: true, text: true, editedAt: true },
   });
   return NextResponse.json({ comment: { id: comment.id, text: comment.text, wasEdited: Boolean(comment.editedAt) } });

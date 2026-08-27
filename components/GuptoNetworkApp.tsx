@@ -41,6 +41,7 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
   const [activeSection, setActiveSection] = useState("home");
   const [toast, setToast] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [hasOwnActiveStory, setHasOwnActiveStory] = useState(false);
 
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -85,6 +86,26 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (activeSection !== "home" || !window.matchMedia("(min-width: 721px)").matches) return;
+
+    const posts = document.getElementById("postsContainer");
+    if (!posts) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+    const redirectWheelToPosts = (event: WheelEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".feed-topbar-categories, .stories") || event.deltaY === 0) return;
+
+      event.preventDefault();
+      const multiplier = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? posts.clientHeight : 1;
+      posts.scrollTop += event.deltaY * multiplier;
+    };
+
+    window.addEventListener("wheel", redirectWheelToPosts, { passive: false });
+    return () => window.removeEventListener("wheel", redirectWheelToPosts);
+  }, [activeSection]);
+
   const toggleTheme = () => {
     document.body.classList.toggle("dark");
     localStorage.setItem("gupto-network-theme", document.body.classList.contains("dark") ? "dark" : "light");
@@ -93,6 +114,16 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
   const openProfile = () => {
     window.location.hash = "profile";
     setActiveSection("profile");
+  };
+
+  const openOwnStory = () => {
+    if (activeSection !== "home") {
+      window.location.hash = "home";
+      setActiveSection("home");
+      window.setTimeout(() => window.dispatchEvent(new Event("gupto:open-own-story")), 120);
+      return;
+    }
+    window.dispatchEvent(new Event("gupto:open-own-story"));
   };
 
   const focusComposer = () => {
@@ -260,6 +291,8 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
       onCommentCountChange={handleCommentCountChange}
       onProfileUpdated={handleProfileUpdated}
       onShowToast={showToast}
+      hasOwnActiveStory={hasOwnActiveStory}
+      onOpenOwnStory={openOwnStory}
     />
   ) : (
     <Feed
@@ -280,6 +313,7 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
       onCommentCountChange={handleCommentCountChange}
       onShowToast={showToast}
       onFilterChange={changeFilter}
+      onOwnStoryStatusChange={setHasOwnActiveStory}
     />
   );
 
@@ -290,7 +324,7 @@ export default function GuptoNetworkApp({ currentUser, initialPosts, initialProf
 
       <MobileHeader onToggleTheme={toggleTheme} onOpenProfile={openProfile} currentUser={user} />
 
-      <div className="app-shell">
+      <div className={`app-shell${activeSection === "home" ? " home-scroll-shell" : ""}`}>
         <Sidebar onFocusComposer={focusComposer} currentUser={user} activeSection={activeSection} />
         {centerContent}
         <RightPanel searchRef={searchRef} following={following} onToggleFollow={toggleFollow} />
